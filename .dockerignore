@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Environnement
+.env.backup
+.env.local
+
+# Dépendances
+/node_modules
+/vendor
+
+# Tests
+/tests
+phpunit.xml
+
+# Cache et logs
+/storage/*.key
+/storage/logs/*.log
+/bootstrap/cache/*
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+
+# Fichiers temporaires
+*.log
+*.cache
+.DS_Store
+Thumbs.db
+
+# Build
+/public/hot
+/public/storage
+npm-debug.log
+yarn-error.log
