@@ -14,6 +14,7 @@ class CategorieDepenseController extends Controller
     public function index()
     {
         $categories = CategorieDepense::latest()->paginate(15);
+
         return view('categories.index', compact('categories'));
     }
 
@@ -32,12 +33,13 @@ class CategorieDepenseController extends Controller
     {
         $validated = $request->validate([
             'nom' => 'required|string|max:255|unique:categories_depenses,nom',
-            'code' => 'required|string|max:10|unique:categories_depenses,code',
+            'code' => 'required|string|max:50|unique:categories_depenses,code',
+            'type' => 'sometimes|in:chantier,administrative',
             'description' => 'nullable|string',
             'is_active' => 'sometimes|boolean',
         ]);
 
-        $validated['is_active'] = $validated['is_active'] ?? true;
+        $validated['is_active'] = $request->boolean('is_active', true);
 
         CategorieDepense::create($validated);
 
@@ -50,6 +52,7 @@ class CategorieDepenseController extends Controller
     public function show(CategorieDepense $categorie)
     {
         $categorie->loadCount('depenses');
+
         return view('categories.show', compact('categorie'));
     }
 
@@ -67,13 +70,14 @@ class CategorieDepenseController extends Controller
     public function update(Request $request, CategorieDepense $categorie)
     {
         $validated = $request->validate([
-            'nom' => 'required|string|max:255|unique:categories_depenses,nom,' . $categorie->id,
-            'code' => 'required|string|max:10|unique:categories_depenses,code,' . $categorie->id,
+            'nom' => 'required|string|max:255|unique:categories_depenses,nom,'.$categorie->id,
+            'code' => 'required|string|max:50|unique:categories_depenses,code,'.$categorie->id,
+            'type' => 'sometimes|in:chantier,administrative',
             'description' => 'nullable|string',
             'is_active' => 'sometimes|boolean',
         ]);
 
-        $validated['is_active'] = $validated['is_active'] ?? $categorie->is_active;
+        $validated['is_active'] = $request->boolean('is_active');
 
         $categorie->update($validated);
 
@@ -85,8 +89,9 @@ class CategorieDepenseController extends Controller
      */
     public function toggleActive(CategorieDepense $categorie)
     {
-        $categorie->update(['is_active' => !$categorie->is_active]);
+        $categorie->update(['is_active' => ! $categorie->is_active]);
         $message = $categorie->is_active ? 'Catégorie activée.' : 'Catégorie désactivée.';
+
         return redirect()->route('categories.index')->with('success', $message);
     }
 
@@ -96,7 +101,7 @@ class CategorieDepenseController extends Controller
     public function destroy(CategorieDepense $categorie)
     {
         // Vérifier qu'il n'y a pas de dépenses associées
-        if ($categorie->depenses()->count() > 0) {
+        if ($categorie->isUsed()) {
             return redirect()->route('categories.index')->with('error', 'Impossible de supprimer une catégorie avec des dépenses.');
         }
 

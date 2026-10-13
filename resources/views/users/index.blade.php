@@ -12,8 +12,8 @@
             <span class="mx-2">/</span>
             <span class="text-gray-900 font-medium">Utilisateurs</span>
         </nav>
-        <a href="{{ route('users.create') }}" class="px-6 py-3 bg-gradient-to-r from-[#E31E24] to-[#C71A20] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-3">
-            <i class="fa-solid fa-user-plus"></i>
+        <a href="{{ route('users.create') }}" class="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#D7232A] px-5 py-2.5 font-semibold text-white transition-colors hover:bg-[#BA1E26]">
+            <x-icon name="user-round-plus" class="" />
             <span>Nouvel Utilisateur</span>
         </a>
     </div>
@@ -22,7 +22,7 @@
     @if(session('success'))
     <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-xl">
         <div class="flex">
-            <i class="fa-solid fa-check-circle text-green-500 mt-0.5"></i>
+            <x-icon name="circle-check" class="text-green-500 mt-0.5" />
             <p class="ml-3 text-sm text-green-700">{{ session('success') }}</p>
         </div>
     </div>
@@ -32,7 +32,7 @@
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-gradient-to-r from-[#E31E24] to-[#C71A20] text-white">
+                <thead class="bg-[#FAF9F7] text-[#444]">
                     <tr>
                         <th class="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">Nom</th>
                         <th class="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">Email</th>
@@ -47,7 +47,7 @@
                     <tr class="group transition-all duration-200 hover:bg-gray-50">
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-gradient-to-br from-[#E31E24] to-[#C71A20] rounded-xl flex items-center justify-center text-white font-bold shadow-sm">
+                                <div class="w-12 h-12 bg-[#F8EEEE] rounded-xl flex items-center justify-center text-[#C31F28] font-bold shadow-xs">
                                     {{ substr($user->name, 0, 1) }}
                                 </div>
                                 <span class="font-bold text-gray-900">{{ $user->name }}</span>
@@ -57,10 +57,10 @@
                         <td class="px-8 py-5">
                             @php
                                 $roleColors = [
-                                    'administrateur' => 'bg-red-100 text-red-700',
-                                    'comptable' => 'bg-green-100 text-green-700',
-                                    'chef_chantier' => 'bg-yellow-100 text-yellow-700',
-                                    'directeur' => 'bg-purple-100 text-purple-700',
+                                    'administrateur' => 'bg-[#F5F4F2] text-[#444]',
+                                    'comptable' => 'bg-[#F5F4F2] text-[#444]',
+                                    'chef_chantier' => 'bg-[#F5F4F2] text-[#444]',
+                                    'directeur' => 'bg-[#F5F4F2] text-[#444]',
                                 ];
                                 $roleClass = $roleColors[$user->role] ?? 'bg-gray-100 text-gray-700';
                             @endphp
@@ -78,23 +78,23 @@
                         </td>
                         <td class="px-8 py-5">
                             <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('users.edit', $user->id) }}" title="Modifier" class="p-2.5 text-gray-600 hover:text-[#E31E24] hover:bg-red-50 rounded-lg transition-all duration-200">
-                                <i class="fa-solid fa-pen-to-square"></i>
+                                <a href="{{ route('users.edit', $user->id) }}" title="Modifier" class="p-2.5 text-[#555] hover:text-[#C31F28] hover:bg-[#F8EEEE] rounded-lg transition-all duration-200">
+                                <x-icon name="square-pen" class="" />
                             </a>
-                            <a href="{{ route('users.reset-password', $user->id) }}" title="Réinitialiser mot de passe" class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition">
-                                <i class="fa-solid fa-key"></i>
+                            <a href="{{ route('users.reset-password', $user->id) }}" title="Réinitialiser mot de passe" class="p-2 text-[#555] hover:bg-[#F8EEEE] hover:text-[#C31F28] rounded-lg transition">
+                                <x-icon name="key-round" class="" />
                             </a>
                             <form action="{{ route('users.toggle-active', $user->id) }}" method="POST" style="display:inline;">
                                 @csrf
-                                <button type="submit" title="{{ $user->is_active ? 'Désactiver' : 'Activer' }}" class="p-2 transition" :class="$user->is_active ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'">
-                                    <i class="fa-solid {{ $user->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
+                                <button type="submit" title="{{ $user->is_active ? 'Désactiver' : 'Activer' }}" class="p-2 text-[#555] transition hover:bg-[#F8EEEE] hover:text-[#C31F28]">
+                                    <x-icon :name="$user->is_active ? 'toggle-right' : 'toggle-left'" />
                                 </button>
                             </form>
                             <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr ?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" title="Supprimer" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
-                                    <i class="fa-solid fa-trash"></i>
+                                <button type="submit" title="Supprimer" class="p-2 text-[#555] hover:bg-[#F8EEEE] hover:text-[#C31F28] rounded-lg transition">
+                                    <x-icon name="trash-2" class="" />
                                 </button>
                             </form>
                         </td>
@@ -102,7 +102,7 @@
                     @empty
                     <tr>
                         <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            <i class="fa-solid fa-inbox text-3xl mb-3"></i>
+                            <x-icon name="inbox" class="size-8 mb-3" />
                             <p>Aucun utilisateur trouvé.</p>
                         </td>
                     </tr>

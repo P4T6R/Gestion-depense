@@ -8,101 +8,83 @@ use App\Models\Depense;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $user = auth()->user() ?? User::where('role', 'administrateur')->first();
+        $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return view('dashboard', [
                 'stats' => $this->getEmptyStats(),
                 'depensesRecentes' => collect(),
                 'chantiersActifs' => collect(),
-                'userRole' => null
+                'userRole' => null,
             ]);
         }
 
-        try {
-            $userRole = $user->role;
-            
-            // Cache des statistiques pour 5 minutes
-            $cacheKey = "dashboard_stats_{$userRole}_{$user->id}";
-            $stats = Cache::remember($cacheKey, 300, function() use ($userRole, $user) {
-                switch ($userRole) {
-                    case 'administrateur':
-                        return $this->getAdminStats();
-                    case 'chef_chantier':
-                        return $this->getChefStats($user);
-                    case 'directeur':
-                        return $this->getDirecteurStats($user);
-                    case 'comptable':
-                        return $this->getComptableStats();
-                    default:
-                        return $this->getEmptyStats();
-                }
-            });
-            
-            $depensesRecentes = collect();
-            $chantiersActifs = collect();
+        $userRole = $user->role;
 
-            // Dashboard personnalisé selon le rôle
-            switch ($userRole) {
-                case 'administrateur':
-                    $depensesRecentes = Depense::with(['chantier:id,nom', 'utilisateur:id,name'])->latest()->take(5)->get();
-                    $chantiersActifs = Chantier::where('statut', 'actif')
-                        ->select('id', 'nom', 'lieu', 'budget_alloue', 'budget_consomme', 'statut')
-                        ->withCount('depenses')
-                        ->take(5)
-                        ->get();
-                    break;
+        $stats = match ($userRole) {
+            'administrateur' => $this->getAdminStats(),
+            'chef_chantier' => $this->getChefStats($user),
+            'directeur' => $this->getDirecteurStats($user),
+            'comptable' => $this->getComptableStats(),
+            default => $this->getEmptyStats(),
+        };
 
-                case 'chef_chantier':
-                    $depensesRecentes = Depense::where('user_id', $user->id)->with(['chantier:id,nom'])->latest()->take(5)->get();
-                    $chantiersActifs = $user->chantiers()
-                        ->where('statut', 'actif')
-                        ->select('id', 'nom', 'lieu', 'budget_alloue', 'budget_consomme', 'statut')
-                        ->withCount('depenses')
-                        ->get();
-                    break;
+        $depensesRecentes = collect();
+        $chantiersActifs = collect();
 
-                case 'directeur':
-                    // Directeur voit TOUTES les dépenses en attente (pas seulement ses chantiers)
-                    $depensesRecentes = Depense::where('statut_validation', 'en_attente')
-                        ->with(['chantier:id,nom', 'utilisateur:id,name'])
-                        ->latest()
-                        ->take(5)
-                        ->get();
-                    // Directeur voit TOUS les chantiers actifs
-                    $chantiersActifs = Chantier::where('statut', 'actif')
-                        ->select('id', 'nom', 'lieu', 'budget_alloue', 'budget_consomme', 'statut')
-                        ->withCount('depenses')
-                        ->take(5)
-                        ->get();
-                    break;
+        // Dashboard personnalisé selon le rôle
+        switch ($userRole) {
+            case 'administrateur':
+                $depensesRecentes = Depense::with(['chantier:id,nom', 'utilisateur:id,name'])->latest()->take(5)->get();
+                $chantiersActifs = Chantier::where('statut', 'actif')
+                    ->select('chantiers.id', 'chantiers.nom', 'chantiers.lieu', 'chantiers.budget_alloue', 'chantiers.budget_consomme', 'chantiers.statut')
+                    ->withCount('depenses')
+                    ->take(5)
+                    ->get();
+                break;
 
-                case 'comptable':
-                    $depensesRecentes = Depense::where('statut_validation', 'acceptee')
-                        ->with(['chantier:id,nom', 'utilisateur:id,name'])
-                        ->latest()
-                        ->take(5)
-                        ->get();
-                    // Comptable voit tous les chantiers actifs pour le suivi des budgets
-                    $chantiersActifs = Chantier::where('statut', 'actif')
-                        ->select('id', 'nom', 'lieu', 'budget_alloue', 'budget_consomme', 'statut')
-                        ->withCount('depenses')
-                        ->take(5)
-                        ->get();
-                    break;
-            }
+            case 'chef_chantier':
+                $depensesRecentes = Depense::visibleTo($user)->with(['chantier:id,nom'])->latest()->take(5)->get();
+                $chantiersActifs = $user->chantiers()
+                    ->where('statut', 'actif')
+                    ->select('chantiers.id', 'chantiers.nom', 'chantiers.lieu', 'chantiers.budget_alloue', 'chantiers.budget_consomme', 'chantiers.statut')
+                    ->withCount('depenses')
+                    ->get();
+                break;
 
-        } catch (\Exception $e) {
-            $stats = $this->getEmptyStats();
-            $depensesRecentes = collect();
-            $chantiersActifs = collect();
-            $userRole = null;
+            case 'directeur':
+                // Directeur voit TOUTES les dépenses en attente (pas seulement ses chantiers)
+                $depensesRecentes = Depense::where('statut_validation', 'en_attente')
+                    ->with(['chantier:id,nom', 'utilisateur:id,name'])
+                    ->latest()
+                    ->take(5)
+                    ->get();
+                // Directeur voit TOUS les chantiers actifs
+                $chantiersActifs = Chantier::where('statut', 'actif')
+                    ->select('chantiers.id', 'chantiers.nom', 'chantiers.lieu', 'chantiers.budget_alloue', 'chantiers.budget_consomme', 'chantiers.statut')
+                    ->withCount('depenses')
+                    ->take(5)
+                    ->get();
+                break;
+
+            case 'comptable':
+                $depensesRecentes = Depense::where('statut_validation', 'acceptee')
+                    ->with(['chantier:id,nom', 'utilisateur:id,name'])
+                    ->latest()
+                    ->take(5)
+                    ->get();
+                // Comptable voit tous les chantiers actifs pour le suivi des budgets
+                $chantiersActifs = Chantier::where('statut', 'actif')
+                    ->select('chantiers.id', 'chantiers.nom', 'chantiers.lieu', 'chantiers.budget_alloue', 'chantiers.budget_consomme', 'chantiers.statut')
+                    ->withCount('depenses')
+                    ->take(5)
+                    ->get();
+                break;
         }
 
         return view('dashboard', compact('stats', 'depensesRecentes', 'chantiersActifs', 'userRole'));
@@ -146,7 +128,7 @@ class DashboardController extends Controller
     private function getChefStats($user)
     {
         // Optimisation: une seule requête au lieu de plusieurs
-        $stats = Depense::where('user_id', $user->id)
+        $stats = Depense::visibleTo($user)
             ->selectRaw("
                 COUNT(*) as mes_depenses,
                 SUM(prix_total) as montant_total,
@@ -160,7 +142,7 @@ class DashboardController extends Controller
                 SUM(CASE WHEN statut_validation = 'rejetee' THEN prix_total ELSE 0 END) as montant_rejetees
             ")
             ->first();
-        
+
         return [
             'mes_depenses' => $stats->mes_depenses ?? 0,
             'montant_total' => $stats->montant_total ?? 0,
@@ -216,7 +198,7 @@ class DashboardController extends Controller
             SUM(CASE WHEN statut_validation = 'rejetee' THEN 1 ELSE 0 END) as rejetees,
             SUM(CASE WHEN statut_validation = 'rejetee' THEN prix_total ELSE 0 END) as montant_rejetees
         ")->first();
-        
+
         return [
             'a_valider' => $stats->a_valider ?? 0,
             'montant_a_valider' => $stats->montant_a_valider ?? 0,
@@ -236,12 +218,12 @@ class DashboardController extends Controller
             'total_depenses' => 0,
             'total_montant_depenses' => 0,
             'total_justificatifs' => 0,
-            
+
             // Stats Chef de Chantier
             'mes_chantiers' => 0,
             'mes_depenses' => 0,
             'montant_total' => 0,
-            
+
             // Stats communes
             'depenses_en_attente' => 0,
             'montant_en_attente' => 0,
@@ -251,14 +233,14 @@ class DashboardController extends Controller
             'montant_validees' => 0,
             'depenses_rejetees' => 0,
             'montant_rejetees' => 0,
-            
+
             // Stats Directeur
             'a_approuver' => 0,
             'montant_a_approuver' => 0,
             'approuvees' => 0,
             'montant_approuvees' => 0,
             'validees' => 0,
-            
+
             // Stats Comptable
             'a_valider' => 0,
             'montant_a_valider' => 0,

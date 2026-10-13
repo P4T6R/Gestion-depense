@@ -1,24 +1,26 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Web\DashboardController;
-use App\Http\Controllers\Web\UserController;
-use App\Http\Controllers\Web\ChantierController;
-use App\Http\Controllers\Web\DepenseController;
-use App\Http\Controllers\Web\CategorieDepenseController;
-use App\Http\Controllers\Web\UniteMesureController;
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\CategorieDepenseController;
+use App\Http\Controllers\Web\ChantierController;
+use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\DepenseController;
+use App\Http\Controllers\Web\UniteMesureController;
+use App\Http\Controllers\Web\UserController;
+use Illuminate\Support\Facades\Route;
 
 // Routes publiques
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::get('/login', [AuthController::class, 'showLogin'])->middleware('guest')->name('login');
+Route::post('/login', [AuthController::class, 'login'])->middleware(['guest', 'throttle:login']);
 
 // Routes protégées par authentification web
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
+    Route::get('/justificatifs/{justificatif}', \App\Http\Controllers\JustificatifController::class)->name('justificatifs.show');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    
+
     // ========== UTILISATEURS (Admin seulement) ==========
     Route::middleware('checkRole:administrateur')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -31,7 +33,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::put('/users/{user}/password', [UserController::class, 'updatePassword'])->name('users.update-password');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
-    
+
     // ========== CHANTIERS (Admin, Chef de chantier, Directeur) ==========
     // Admin seulement peut créer, modifier, supprimer
     Route::middleware('checkRole:administrateur')->group(function () {
@@ -41,7 +43,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::put('/chantiers/{chantier}', [ChantierController::class, 'update'])->name('chantiers.update');
         Route::delete('/chantiers/{chantier}', [ChantierController::class, 'destroy'])->name('chantiers.destroy');
     });
-    
+
     // Tous (sauf comptable) peuvent consulter
     Route::middleware('checkRole:administrateur,chef_chantier,directeur')->group(function () {
         Route::get('/chantiers', [ChantierController::class, 'index'])->name('chantiers.index');
@@ -51,7 +53,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     // ========== DÉPENSES ==========
     // Tous les utilisateurs peuvent voir les dépenses (filtrées par leur rôle)
     Route::get('/depenses', [DepenseController::class, 'index'])->name('depenses.index');
-    
+
     // Chef de chantier et Directeur peuvent créer, modifier, supprimer des dépenses
     Route::middleware('checkRole:chef_chantier,directeur')->group(function () {
         Route::get('/depenses/create', [DepenseController::class, 'create'])->name('depenses.create');
@@ -60,14 +62,15 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::put('/depenses/{depense}', [DepenseController::class, 'update'])->name('depenses.update');
         Route::delete('/depenses/{depense}', [DepenseController::class, 'destroy'])->name('depenses.destroy');
     });
-    
+
     Route::get('/depenses/{depense}', [DepenseController::class, 'show'])->name('depenses.show');
-    
-    // Directeur peut approuver les dépenses
+
+    // Le directeur décide sur les factures en attente.
     Route::middleware('checkRole:directeur')->group(function () {
         Route::post('/depenses/{depense}/approve', [DepenseController::class, 'approve'])->name('depenses.approve');
+        Route::post('/depenses/{depense}/reject', [DepenseController::class, 'reject'])->name('depenses.reject');
     });
-    
+
     // Comptable peut valider ou rejeter les dépenses
     Route::middleware('checkRole:comptable')->group(function () {
         Route::post('/depenses/{depense}/validate', [DepenseController::class, 'validateDepense'])->name('depenses.validate');
@@ -105,4 +108,3 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::delete('/unites/{unite}', [UniteMesureController::class, 'destroy'])->name('unites.destroy');
     });
 });
-

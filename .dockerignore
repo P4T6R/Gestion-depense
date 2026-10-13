@@ -10,6 +10,9 @@
 *.swo
 
 # Environnement
+.env
+.env.*
+!.env.example
 .env.backup
 .env.local
 
@@ -22,6 +25,10 @@
 phpunit.xml
 
 # Cache et logs
+/storage/app/public/*
+/storage/app/private
+/storage/framework/sessions/*
+/storage/framework/views/*
 /storage/*.key
 /storage/logs/*.log
 /bootstrap/cache/*

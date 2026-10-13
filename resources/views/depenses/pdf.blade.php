@@ -121,9 +121,9 @@
             <tr>
                 <td>#{{ $depense->id }}</td>
                 <td>{{ $depense->chantier->nom ?? 'N/A' }}</td>
-                <td>{{ $depense->nom_produit }}</td>
+                <td>{{ $depense->libelle }}</td>
                 <td>{{ $depense->quantite }} {{ $depense->unite->nom ?? '' }}</td>
-                <td>{{ number_format($depense->prix_unitaire, 0, ',', ' ') }} F</td>
+                <td>{{ number_format($depense->prix_unitaire ?? 0, 0, ',', ' ') }} F</td>
                 <td><strong>{{ number_format($depense->prix_total, 0, ',', ' ') }} F</strong></td>
                 <td>{{ $depense->categorie->nom ?? 'N/A' }}</td>
                 <td>

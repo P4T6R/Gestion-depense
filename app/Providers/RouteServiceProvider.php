@@ -17,13 +17,15 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/home';
+    public const HOME = '/dashboard';
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.
      */
     public function boot(): void
     {
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by((is_string($request->input('email')) ? strtolower($request->input('email')) : '').'|'.$request->ip()));
+
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });

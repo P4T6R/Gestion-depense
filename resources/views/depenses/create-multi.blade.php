@@ -16,7 +16,7 @@
 
     <div class="bg-white rounded-2xl shadow-lg p-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
-            <i class="fa-solid fa-file-invoice mr-3 text-[#E31E24]"></i>
+            <x-icon name="file-text" class="mr-3 text-[#D7232A]" />
             Nouvelle Facture - Multi-articles
         </h1>
 
@@ -27,7 +27,7 @@
             <div class="grid md:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-xl">
                 <div class="md:col-span-2">
                     <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                        <i class="fa-solid fa-file-invoice text-[#E31E24] mr-2"></i>
+                        <x-icon name="file-text" class="text-[#D7232A] mr-2" />
                         Informations Facture
                     </h3>
                 </div>
@@ -35,9 +35,9 @@
                 <!-- Chantier -->
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">
-                        <i class="fa-solid fa-building text-[#E31E24] mr-2"></i>Chantier *
+                        <x-icon name="building-2" class="text-[#D7232A] mr-2" />Chantier *
                     </label>
-                    <select name="chantier_id" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    <select name="chantier_id" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]">
                         <option value="">Sélectionner un chantier</option>
                         @foreach($chantiers as $chantier)
                             <option value="{{ $chantier->id }}">{{ $chantier->nom }}</option>
@@ -48,25 +48,25 @@
                 <!-- Numéro Facture -->
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">
-                        <i class="fa-solid fa-hashtag text-blue-500 mr-2"></i>N° Facture
+                        <x-icon name="hash" class="text-[#D7232A] mr-2" />N° Facture
                     </label>
-                    <input type="text" name="numero_facture" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="FACT-2026-001">
+                    <input type="text" name="numero_facture" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]" placeholder="FACT-2026-001">
                 </div>
 
                 <!-- Fournisseur -->
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">
-                        <i class="fa-solid fa-truck text-purple-500 mr-2"></i>Fournisseur
+                        <x-icon name="truck" class="text-[#D7232A] mr-2" />Fournisseur
                     </label>
-                    <input type="text" name="fournisseur" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Quincaillerie ABC">
+                    <input type="text" name="fournisseur" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]" placeholder="Quincaillerie ABC">
                 </div>
 
                 <!-- Date Facture -->
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">
-                        <i class="fa-solid fa-calendar text-green-500 mr-2"></i>Date Facture
+                        <x-icon name="calendar-days" class="text-green-500 mr-2" />Date Facture
                     </label>
-                    <input type="date" name="date_facture" value="{{ date('Y-m-d') }}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    <input type="date" name="date_facture" value="{{ date('Y-m-d') }}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]">
                 </div>
             </div>
 
@@ -74,11 +74,11 @@
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <i class="fa-solid fa-list text-[#E31E24] mr-2"></i>
+                        <x-icon name="list" class="text-[#D7232A] mr-2" />
                         Articles de la Facture
                     </h3>
                     <button type="button" @click="ajouterLigne()" class="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all flex items-center space-x-2">
-                        <i class="fa-solid fa-plus"></i>
+                        <x-icon name="plus" class="" />
                         <span>Ajouter un article</span>
                     </button>
                 </div>
@@ -90,7 +90,7 @@
                             <div class="flex items-center justify-between mb-4">
                                 <h4 class="font-bold text-gray-700">Article <span x-text="index + 1"></span></h4>
                                 <button type="button" @click="retirerLigne(index)" x-show="lignes.length > 1" class="text-red-500 hover:text-red-700">
-                                    <i class="fa-solid fa-trash"></i>
+                                    <x-icon name="trash-2" class="" />
                                 </button>
                             </div>
 
@@ -98,13 +98,13 @@
                                 <!-- Désignation -->
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Désignation *</label>
-                                    <input type="text" x-model="ligne.designation" :name="'lignes[' + index + '][designation]'" required class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Ex: Ciment CPJ 35">
+                                    <input type="text" x-model="ligne.designation" :name="'lignes[' + index + '][designation]'" required class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]" placeholder="Ex: Ciment CPJ 35">
                                 </div>
 
                                 <!-- Catégorie -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Catégorie</label>
-                                    <select x-model="ligne.categorie_id" :name="'lignes[' + index + '][categorie_depense_id]'" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                                    <select x-model="ligne.categorie_id" :name="'lignes[' + index + '][categorie_depense_id]'" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]">
                                         <option value="">--</option>
                                         @foreach($categories as $cat)
                                             <option value="{{ $cat->id }}">{{ $cat->nom }}</option>
@@ -115,7 +115,7 @@
                                 <!-- Unité -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Unité</label>
-                                    <select x-model="ligne.unite_id" :name="'lignes[' + index + '][unite_mesure_id]'" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                                    <select x-model="ligne.unite_id" :name="'lignes[' + index + '][unite_mesure_id]'" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]">
                                         <option value="">--</option>
                                         @foreach($unites as $unite)
                                             <option value="{{ $unite->id }}">{{ $unite->nom }}</option>
@@ -126,13 +126,13 @@
                                 <!-- Quantité -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Quantité *</label>
-                                    <input type="number" x-model.number="ligne.quantite" :name="'lignes[' + index + '][quantite]'" required step="0.01" min="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                                    <input type="number" x-model.number="ligne.quantite" :name="'lignes[' + index + '][quantite]'" required step="0.01" min="0.01" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]">
                                 </div>
 
                                 <!-- Prix Unitaire -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Prix Unit. (F) *</label>
-                                    <input type="number" x-model.number="ligne.prix_unitaire" :name="'lignes[' + index + '][prix_unitaire]'" required step="0.01" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                                    <input type="number" x-model.number="ligne.prix_unitaire" :name="'lignes[' + index + '][prix_unitaire]'" required step="0.01" min="0" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]">
                                 </div>
 
                                 <!-- Montant (auto) -->
@@ -144,7 +144,7 @@
                                 <!-- Observations -->
                                 <div class="md:col-span-4">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Observations</label>
-                                    <input type="text" x-model="ligne.observations" :name="'lignes[' + index + '][observations]'" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Notes sur cet article...">
+                                    <input type="text" x-model="ligne.observations" :name="'lignes[' + index + '][observations]'" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]" placeholder="Notes sur cet article...">
                                 </div>
                             </div>
                         </div>
@@ -152,10 +152,10 @@
                 </div>
 
                 <!-- Total Général -->
-                <div class="p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
+                <div class="p-6 bg-linear-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
-                            <i class="fa-solid fa-receipt text-3xl text-[#E31E24]"></i>
+                            <x-icon name="receipt" class="size-8 text-[#D7232A]" />
                             <div>
                                 <p class="text-sm text-gray-600">TOTAL FACTURE</p>
                                 <p class="text-3xl font-bold text-[#E31E24]" x-text="formatPrice(totalFacture)"></p>
@@ -172,28 +172,28 @@
             <!-- Justificatif -->
             <div>
                 <label class="block text-gray-700 font-semibold mb-3">
-                    <i class="fa-solid fa-camera text-teal-500 mr-2"></i>Photo de la Facture
+                    <x-icon name="camera" class="text-[#D7232A] mr-2" />Photo de la Facture
                 </label>
-                <input type="file" name="justificatif" accept="image/*,application/pdf" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                <input type="file" name="justificatif" accept="image/*,application/pdf" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]">
                 <p class="text-sm text-gray-500 mt-2">Une seule photo pour toute la facture</p>
             </div>
 
             <!-- Observations Générales -->
             <div>
                 <label class="block text-gray-700 font-semibold mb-3">
-                    <i class="fa-solid fa-pen text-purple-500 mr-2"></i>Observations Générales
+                    <x-icon name="pencil" class="text-[#D7232A] mr-2" />Observations Générales
                 </label>
-                <textarea name="observations" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Notes sur cette facture..."></textarea>
+                <textarea name="observations" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]" rows="3" placeholder="Notes sur cette facture..."></textarea>
             </div>
 
             <!-- Boutons -->
             <div class="flex gap-4 pt-6 border-t border-gray-200">
                 <button type="submit" class="flex-1 px-6 py-3 bg-[#E31E24] text-white font-bold rounded-xl hover:bg-[#C71A20] transition-all flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-save"></i>
+                    <x-icon name="save" class="" />
                     <span>Enregistrer la Facture</span>
                 </button>
                 <a href="{{ route('depenses.index') }}" class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-all flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-times"></i>
+                    <x-icon name="x" class="" />
                     <span>Annuler</span>
                 </a>
             </div>

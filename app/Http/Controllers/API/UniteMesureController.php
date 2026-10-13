@@ -30,7 +30,7 @@ class UniteMesureController extends Controller
      */
     public function store(Request $request)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -54,7 +54,7 @@ class UniteMesureController extends Controller
      */
     public function show(UniteMesure $unite)
     {
-        $unite->load(['depenses']);
+        $unite->load(['depenses' => fn ($query) => $query->visibleTo(request()->user())]);
         $unite->loadCount('depenses');
 
         return response()->json($unite);
@@ -65,13 +65,13 @@ class UniteMesureController extends Controller
      */
     public function update(Request $request, UniteMesure $unite)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $validated = $request->validate([
-            'nom' => 'sometimes|string|max:255|unique:unites_mesure,nom,' . $unite->id,
-            'symbole' => 'sometimes|string|max:20|unique:unites_mesure,symbole,' . $unite->id,
+            'nom' => 'sometimes|string|max:255|unique:unites_mesure,nom,'.$unite->id,
+            'symbole' => 'sometimes|string|max:20|unique:unites_mesure,symbole,'.$unite->id,
             'description' => 'sometimes|nullable|string',
             'is_active' => 'sometimes|boolean',
         ]);
@@ -89,12 +89,12 @@ class UniteMesureController extends Controller
      */
     public function toggleActive(Request $request, UniteMesure $unite)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $unite->update([
-            'is_active' => !$unite->is_active
+            'is_active' => ! $unite->is_active,
         ]);
 
         $message = $unite->is_active ? 'Unité activée' : 'Unité désactivée';
@@ -110,14 +110,14 @@ class UniteMesureController extends Controller
      */
     public function destroy(Request $request, UniteMesure $unite)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         // Vérifier si l'unité est utilisée
-        if ($unite->depenses()->count() > 0) {
+        if ($unite->isUsed()) {
             return response()->json([
-                'message' => 'Impossible de supprimer une unité utilisée dans des dépenses'
+                'message' => 'Impossible de supprimer une unité utilisée dans des dépenses',
             ], 422);
         }
 

@@ -10,6 +10,11 @@ class DepensePolicy
 {
     use HandlesAuthorization;
 
+    public function before(User $user): ?bool
+    {
+        return $user->is_active ? null : false;
+    }
+
     /**
      * Determine whether the user can view any models.
      */
@@ -31,7 +36,7 @@ class DepensePolicy
 
         // Chef de chantier ne peut voir que ses propres dépenses
         if ($user->role === 'chef_chantier') {
-            return $depense->user_id === $user->id;
+            return $depense->user_id === $user->id && $user->hasAccessToChantier($depense->chantier_id);
         }
 
         return false;
@@ -56,13 +61,13 @@ class DepensePolicy
             return false;
         }
 
-        // Seulement si elle est encore en attente
-        if ($depense->statut_validation !== 'en_attente') {
+        // Une facture rejetée peut être corrigée puis renvoyée au directeur.
+        if (! in_array($depense->statut_validation, ['en_attente', 'rejetee'])) {
             return false;
         }
 
         // Et seulement si c'est un chef de chantier ou directeur
-        return in_array($user->role, ['chef_chantier', 'directeur']);
+        return in_array($user->role, ['chef_chantier', 'directeur']) && $user->hasAccessToChantier($depense->chantier_id);
     }
 
     /**
@@ -70,8 +75,7 @@ class DepensePolicy
      */
     public function delete(User $user, Depense $depense): bool
     {
-        // Mêmes règles que pour la modification
-        return $this->update($user, $depense);
+        return $depense->statut_validation === 'en_attente' && $this->update($user, $depense);
     }
 
     /**

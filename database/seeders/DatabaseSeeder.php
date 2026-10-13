@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Chantier;
 use App\Models\Depense;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -12,21 +12,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Désactiver les contraintes de clés étrangères
-        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-
-        // Vider les tables pour éviter les doublons
-        \Illuminate\Support\Facades\DB::table('users')->truncate();
-        \Illuminate\Support\Facades\DB::table('chantiers')->truncate();
-        \Illuminate\Support\Facades\DB::table('depenses')->truncate();
-        \Illuminate\Support\Facades\DB::table('chantier_user')->truncate();
-
-        // Réactiver les contraintes
-        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Les comptes de démonstration ne doivent pas être créés en production.');
+        }
 
         // Créer les catégories et unités d'abord
         $this->call(CategoriesUnitesSeeder::class);
-        $admin = User::create([
+        $admin = User::firstOrCreate(['email' => 'admin@chantier.com'], [
             'name' => 'Admin Principal',
             'email' => 'admin@chantier.com',
             'password' => Hash::make('password'),
@@ -36,7 +28,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Créer un comptable
-        $comptable = User::create([
+        $comptable = User::firstOrCreate(['email' => 'comptable@chantier.com'], [
             'name' => 'Marie Comptable',
             'email' => 'comptable@chantier.com',
             'password' => Hash::make('password'),
@@ -46,7 +38,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Créer un directeur
-        $directeur = User::create([
+        $directeur = User::firstOrCreate(['email' => 'directeur@chantier.com'], [
             'name' => 'Pierre Directeur',
             'email' => 'directeur@chantier.com',
             'password' => Hash::make('password'),
@@ -56,7 +48,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Créer des chefs de chantier
-        $chef1 = User::create([
+        $chef1 = User::firstOrCreate(['email' => 'chef1@chantier.com'], [
             'name' => 'Jean Chef',
             'email' => 'chef1@chantier.com',
             'password' => Hash::make('password'),
@@ -65,7 +57,7 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $chef2 = User::create([
+        $chef2 = User::firstOrCreate(['email' => 'chef2@chantier.com'], [
             'name' => 'Paul Chef',
             'email' => 'chef2@chantier.com',
             'password' => Hash::make('password'),
@@ -75,7 +67,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Créer des chantiers
-        $chantier1 = Chantier::create([
+        $chantier1 = Chantier::firstOrCreate(['nom' => 'Construction Immeuble Centre-Ville'], [
             'nom' => 'Construction Immeuble Centre-Ville',
             'lieu' => 'Ouagadougou, Secteur 15',
             'description' => 'Construction immeuble R+3',
@@ -86,7 +78,7 @@ class DatabaseSeeder extends Seeder
             'created_by' => $admin->id,
         ]);
 
-        $chantier2 = Chantier::create([
+        $chantier2 = Chantier::firstOrCreate(['nom' => 'Réhabilitation Route Nationale'], [
             'nom' => 'Réhabilitation Route Nationale',
             'lieu' => 'Bobo-Dioulasso - Banfora',
             'description' => 'Réhabilitation 50 km',
@@ -102,16 +94,16 @@ class DatabaseSeeder extends Seeder
         $chantier2->affecterChef($chef2);
 
         // Créer des dépenses
-        $depense1 = Depense::create([
+        $depense1 = Depense::firstOrCreate(['chantier_id' => $chantier1->id, 'id_produit' => 'CIM-001'], [
             'chantier_id' => $chantier1->id,
             'user_id' => $chef1->id,
             'id_produit' => 'CIM-001',
             'nom_produit' => 'Ciment Portland',
-            'unite_id' => 1, // Sac
+            'unite_id' => \App\Models\UniteMesure::where('symbole', 'sac')->firstOrFail()->id, // Sac
             'quantite' => 100,
             'prix_unitaire' => 5500,
             'prix_total' => 550000,
-            'categorie_id' => 1, // Matériaux
+            'categorie_id' => \App\Models\CategorieDepense::where('code', 'MAT')->firstOrFail()->id, // Matériaux
             'observations' => 'Livraison mardi',
             'statut_paiement' => 'paye',
             'statut_livraison' => 'non_livre',

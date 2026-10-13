@@ -17,24 +17,29 @@ class ApiExpenseTest extends TestCase
     use RefreshDatabase;
 
     private $admin;
+
     private $chef;
+
     private $comptable;
+
     private $chantier;
+
     private $unite;
+
     private $categorie;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Créer les données de test
         $this->admin = User::factory()->admin()->create();
         $this->chef = User::factory()->chefChantier()->create();
         $this->comptable = User::factory()->comptable()->create();
-        
+
         $this->chantier = Chantier::factory()->create();
         $this->chantier->chefsChantier()->attach($this->chef->id);
-        
+
         $this->unite = UniteMesure::factory()->create();
         $this->categorie = CategorieDepense::factory()->create();
     }
@@ -55,7 +60,7 @@ class ApiExpenseTest extends TestCase
     {
         $response = $this->actingAs($this->chef)
             ->getJson('/api/depenses');
-        
+
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
@@ -66,8 +71,8 @@ class ApiExpenseTest extends TestCase
                         'quantite',
                         'prix_unitaire',
                         'prix_total',
-                    ]
-                ]
+                    ],
+                ],
             ]);
     }
 
@@ -85,7 +90,7 @@ class ApiExpenseTest extends TestCase
                 'prix_unitaire' => 5000,
                 'categorie_id' => $this->categorie->id,
                 'observations' => 'Test expense',
-                'statut_paiement' => 'paye',
+                'statut_paiement' => 'non_paye',
                 'statut_livraison' => 'livre',
             ]);
 
@@ -97,7 +102,7 @@ class ApiExpenseTest extends TestCase
                     'nom_produit',
                     'quantite',
                     'prix_total',
-                ]
+                ],
             ]);
 
         $this->assertDatabaseHas('depenses', [
@@ -111,7 +116,7 @@ class ApiExpenseTest extends TestCase
      */
     public function test_create_expense_with_files()
     {
-        Storage::fake('public');
+        Storage::fake('private');
 
         // Utiliser un fichier PDF au lieu d'une image (pas besoin d'extension GD)
         $file = UploadedFile::fake()->create('facture.pdf', 100, 'application/pdf');
@@ -125,14 +130,14 @@ class ApiExpenseTest extends TestCase
                 'prix_unitaire' => 15000,
                 'categorie_id' => $this->categorie->id,
                 'observations' => 'Matériau de construction',
-                'statut_paiement' => 'paye',
+                'statut_paiement' => 'non_paye',
                 'statut_livraison' => 'livre',
                 'justificatifs' => [$file],
             ]);
 
         // Si erreur 500, afficher le contenu pour déboguer
         if ($response->status() === 500) {
-            $this->fail('500 error: ' . $response->getContent());
+            $this->fail('500 error: '.$response->getContent());
         }
 
         $response->assertStatus(201)
@@ -141,7 +146,7 @@ class ApiExpenseTest extends TestCase
                 'depense' => [
                     'id',
                     'nom_produit',
-                ]
+                ],
             ]);
 
         $expense = Depense::latest()->first();
@@ -180,7 +185,7 @@ class ApiExpenseTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->chef)
-            ->getJson('/api/depenses/' . $depense->id);
+            ->getJson('/api/depenses/'.$depense->id);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -200,7 +205,7 @@ class ApiExpenseTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->chef)
-            ->putJson('/api/depenses/' . $depense->id, [
+            ->putJson('/api/depenses/'.$depense->id, [
                 'nom_produit' => 'Produit modifié',
                 'quantite' => 100,
                 'prix_unitaire' => 5000,
@@ -228,7 +233,7 @@ class ApiExpenseTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->chef)
-            ->deleteJson('/api/depenses/' . $depense->id);
+            ->deleteJson('/api/depenses/'.$depense->id);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -252,7 +257,7 @@ class ApiExpenseTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->chef)
-            ->getJson('/api/depenses/' . $depense->id);
+            ->getJson('/api/depenses/'.$depense->id);
 
         $response->assertStatus(403);
     }
@@ -282,11 +287,11 @@ class ApiExpenseTest extends TestCase
         $depense = Depense::factory()->create([
             'user_id' => $this->chef->id,
             'chantier_id' => $this->chantier->id,
-            'statut_validation' => 'en_attente',
+            'statut_validation' => 'acceptee',
         ]);
 
         $response = $this->actingAs($this->comptable)
-            ->postJson('/api/depenses/' . $depense->id . '/valider', [
+            ->postJson('/api/depenses/'.$depense->id.'/valider', [
                 'commentaire' => 'Validé',
             ]);
 

@@ -14,7 +14,7 @@
         </nav>
         @if(auth()->user()->role === 'administrateur')
         <a href="{{ route('chantiers.create') }}" class="px-6 py-3 bg-[#E31E24] text-white font-bold rounded-xl shadow-lg hover:bg-[#C71A20] transition-all flex items-center space-x-2">
-            <i class="fa-solid fa-plus"></i>
+            <x-icon name="plus" class="" />
             <span>Nouveau Chantier</span>
         </a>
         @endif
@@ -24,7 +24,7 @@
     @if(session('success'))
     <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-xl">
         <div class="flex">
-            <i class="fa-solid fa-check-circle text-green-500 mt-0.5"></i>
+            <x-icon name="circle-check" class="text-green-500 mt-0.5" />
             <p class="ml-3 text-sm text-green-700">{{ session('success') }}</p>
         </div>
     </div>
@@ -34,7 +34,7 @@
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-gradient-to-r from-[#E31E24] to-[#C71A20] text-white">
+                <thead class="bg-[#FAF9F7] text-[#444]">
                     <tr>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Nom du Chantier</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Localisation</th>
@@ -49,14 +49,14 @@
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-6 py-4">
                             <div class="flex items-center">
-                                <div class="w-10 h-10 bg-gradient-to-br from-[#E31E24] to-[#C71A20] rounded-lg flex items-center justify-center text-white">
-                                    <i class="fa-solid fa-building"></i>
+                                <div class="w-10 h-10 bg-[#F8EEEE] rounded-lg flex items-center justify-center text-[#C31F28]">
+                                    <x-icon name="building-2" class="" />
                                 </div>
                                 <span class="ml-3 font-semibold text-gray-900">{{ $chantier->nom }}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-gray-600">
-                            <i class="fa-solid fa-location-dot text-[#E31E24] mr-2"></i>{{ $chantier->lieu }}
+                            <x-icon name="map-pin" class="text-[#666] mr-2" />{{ $chantier->lieu }}
                         </td>
                         <td class="px-6 py-4">
                             @php
@@ -64,7 +64,7 @@
                             @endphp
                             @if($chef)
                                 <div class="flex items-center">
-                                    <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                    <div class="w-8 h-8 bg-[#E9E7E3] rounded-full flex items-center justify-center text-[#333] text-xs font-bold">
                                         {{ substr($chef->name, 0, 1) }}
                                     </div>
                                     <span class="ml-2 text-sm text-gray-900">{{ $chef->name }}</span>
@@ -80,7 +80,7 @@
                             @php
                                 $statusColors = [
                                     'actif' => 'bg-green-100 text-green-700',
-                                    'suspendu' => 'bg-yellow-100 text-yellow-700',
+                                    'en_pause' => 'bg-yellow-100 text-yellow-700',
                                     'termine' => 'bg-gray-100 text-gray-700',
                                 ];
                                 $statusClass = $statusColors[$chantier->statut] ?? 'bg-gray-100 text-gray-700';
@@ -90,18 +90,18 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right space-x-2 flex items-center justify-end">
-                            <a href="{{ route('chantiers.show', $chantier->id) }}" title="Voir détails" class="p-2 text-[#E31E24] hover:bg-blue-50 rounded-lg transition">
-                                <i class="fa-solid fa-eye"></i>
+                            <a href="{{ route('chantiers.show', $chantier->id) }}" title="Voir détails" class="p-2 text-[#555] hover:bg-[#F8EEEE] hover:text-[#C31F28] rounded-lg transition">
+                                <x-icon name="eye" class="" />
                             </a>
                             @if(auth()->user()->role === 'administrateur')
-                            <a href="{{ route('chantiers.edit', $chantier->id) }}" title="Modifier" class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition">
-                                <i class="fa-solid fa-pen-to-square"></i>
+                            <a href="{{ route('chantiers.edit', $chantier->id) }}" title="Modifier" class="p-2 text-[#555] hover:bg-[#F8EEEE] hover:text-[#C31F28] rounded-lg transition">
+                                <x-icon name="square-pen" class="" />
                             </a>
                             <form action="{{ route('chantiers.destroy', $chantier->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr ?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" title="Supprimer" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
-                                    <i class="fa-solid fa-trash"></i>
+                                <button type="submit" title="Supprimer" class="p-2 text-[#555] hover:bg-[#F8EEEE] hover:text-[#C31F28] rounded-lg transition">
+                                    <x-icon name="trash-2" class="" />
                                 </button>
                             </form>
                             @endif
@@ -110,7 +110,7 @@
                     @empty
                     <tr>
                         <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            <i class="fa-solid fa-inbox text-3xl mb-3"></i>
+                            <x-icon name="inbox" class="size-8 mb-3" />
                             <p>Aucun chantier trouvé.</p>
                         </td>
                     </tr>

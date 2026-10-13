@@ -17,20 +17,20 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required',
+            'password' => 'required|string|max:1024',
         ]);
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Les identifiants sont incorrects.'],
             ]);
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return response()->json([
-                'message' => 'Votre compte a été désactivé. Contactez l\'administrateur.'
+                'message' => 'Votre compte a été désactivé. Contactez l\'administrateur.',
             ], 403);
         }
 
@@ -52,10 +52,20 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // Sanctum peut aussi authentifier par session, sans token persistant.
+        $token = $request->user()->currentAccessToken();
+        if ($token instanceof \Laravel\Sanctum\PersonalAccessToken) {
+            $token->delete();
+        } else {
+            \Illuminate\Support\Facades\Auth::guard('web')->logout();
+            if ($request->hasSession()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+        }
 
         return response()->json([
-            'message' => 'Déconnexion réussie'
+            'message' => 'Déconnexion réussie',
         ]);
     }
 
@@ -81,7 +91,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'phone' => 'sometimes|nullable|string|max:20',
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'email' => 'sometimes|email|unique:users,email,'.$user->id,
         ]);
 
         $user->update($validated);
@@ -98,27 +108,32 @@ class AuthController extends Controller
     public function changePassword(Request $request)
     {
         $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
+            'current_password' => 'required|string|max:1024',
+            'new_password' => 'required|string|min:8|max:1024|confirmed',
         ]);
 
         $user = $request->user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return response()->json([
-                'message' => 'Le mot de passe actuel est incorrect'
+                'message' => 'Le mot de passe actuel est incorrect',
             ], 422);
         }
 
         $user->update([
-            'password' => Hash::make($request->new_password)
+            'password' => Hash::make($request->new_password),
         ]);
 
         // Supprimer tous les tokens sauf le courant
-        $user->tokens()->where('id', '!=', $request->user()->currentAccessToken()->id)->delete();
+        $token = $user->currentAccessToken();
+        $tokens = $user->tokens();
+        if ($token instanceof \Laravel\Sanctum\PersonalAccessToken) {
+            $tokens->where('id', '!=', $token->id);
+        }
+        $tokens->delete();
 
         return response()->json([
-            'message' => 'Mot de passe modifié avec succès'
+            'message' => 'Mot de passe modifié avec succès',
         ]);
     }
 }

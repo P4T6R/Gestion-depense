@@ -2,9 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\CategorieDepense;
 use App\Models\Chantier;
-use App\Models\Depense;
+use App\Models\UniteMesure;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,8 +14,11 @@ class ApiTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
+
     protected $chef;
+
     protected $comptable;
+
     protected $token;
 
     protected function setUp(): void
@@ -44,7 +48,6 @@ class ApiTest extends TestCase
         ]);
     }
 
-    /** @test */
     public function test_login_admin()
     {
         $response = $this->postJson('/api/login', [
@@ -53,16 +56,15 @@ class ApiTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-                ->assertJsonStructure([
-                    'message',
-                    'user',
-                    'token'
-                ]);
+            ->assertJsonStructure([
+                'message',
+                'user',
+                'token',
+            ]);
 
         $this->token = $response->json('token');
     }
 
-    /** @test */
     public function test_login_invalid_credentials()
     {
         $response = $this->postJson('/api/login', [
@@ -73,7 +75,6 @@ class ApiTest extends TestCase
         $response->assertStatus(422);
     }
 
-    /** @test */
     public function test_get_user_profile()
     {
         $this->actingAs($this->admin, 'sanctum');
@@ -81,15 +82,16 @@ class ApiTest extends TestCase
         $response = $this->getJson('/api/auth/me');
 
         $response->assertStatus(200)
-                ->assertJson([
+            ->assertJson([
+                'user' => [
                     'id' => $this->admin->id,
                     'name' => 'Admin Test',
                     'email' => 'admin@test.com',
                     'role' => 'administrateur',
-                ]);
+                ],
+            ]);
     }
 
-    /** @test */
     public function test_admin_can_list_users()
     {
         $this->actingAs($this->admin, 'sanctum');
@@ -97,10 +99,9 @@ class ApiTest extends TestCase
         $response = $this->getJson('/api/users');
 
         $response->assertStatus(200)
-                ->assertJsonCount(3);
+            ->assertJsonCount(3);
     }
 
-    /** @test */
     public function test_chef_cannot_list_users()
     {
         $this->actingAs($this->chef, 'sanctum');
@@ -110,7 +111,6 @@ class ApiTest extends TestCase
         $response->assertStatus(403);
     }
 
-    /** @test */
     public function test_create_chantier()
     {
         $this->actingAs($this->admin, 'sanctum');
@@ -126,13 +126,14 @@ class ApiTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-                ->assertJson([
+            ->assertJson([
+                'chantier' => [
                     'nom' => 'Test Chantier',
-                    'budget_alloue' => 1000000,
-                ]);
+                    'budget_alloue' => '1000000.00',
+                ],
+            ]);
     }
 
-    /** @test */
     public function test_chef_cannot_create_chantier()
     {
         $this->actingAs($this->chef, 'sanctum');
@@ -145,7 +146,6 @@ class ApiTest extends TestCase
         $response->assertStatus(403);
     }
 
-    /** @test */
     public function test_list_chantiers()
     {
         // Créer un chantier
@@ -158,16 +158,18 @@ class ApiTest extends TestCase
         $response = $this->getJson('/api/chantiers');
 
         $response->assertStatus(200)
-                ->assertJsonCount(1);
+            ->assertJsonCount(1);
     }
 
-    /** @test */
     public function test_create_depense()
     {
         $chantier = Chantier::factory()->create([
             'created_by' => $this->admin->id,
         ]);
 
+        $chantier->affecterChef($this->chef);
+        $categorie = CategorieDepense::factory()->create();
+        $unite = UniteMesure::factory()->create();
         $this->actingAs($this->chef, 'sanctum');
 
         $response = $this->postJson('/api/depenses', [
@@ -175,14 +177,15 @@ class ApiTest extends TestCase
             'nom_produit' => 'Test Produit',
             'quantite' => 10,
             'prix_unitaire' => 1000,
-            'categorie_id' => 1,
-            'unite_id' => 1,
+            'categorie_id' => $categorie->id,
+            'unite_id' => $unite->id,
+            'statut_paiement' => 'non_paye',
+            'statut_livraison' => 'livre',
         ]);
 
         $response->assertStatus(201);
     }
 
-    /** @test */
     public function test_dashboard_access()
     {
         $this->actingAs($this->admin, 'sanctum');
@@ -190,11 +193,13 @@ class ApiTest extends TestCase
         $response = $this->getJson('/api/dashboard');
 
         $response->assertStatus(200)
-                ->assertJsonStructure([
+            ->assertJsonStructure([
+                'stats' => [
                     'total_chantiers',
                     'chantiers_actifs',
                     'total_depenses',
                     'depenses_validees',
-                ]);
+                ],
+            ]);
     }
 }

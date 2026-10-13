@@ -12,20 +12,20 @@
         <span class="text-gray-900 font-medium">Nouvel Utilisateur</span>
     </nav>
 
-    <div class="bg-white rounded-3xl shadow-xl overflow-hidden animate-fade-up">
-        <div class="bg-gradient-to-r from-[#E31E24] to-[#C71A20] px-8 py-6">
-            <h2 class="text-2xl font-bold text-white">Ajouter un Utilisateur</h2>
-            <p class="text-blue-100 mt-1 text-sm">Remplissez les informations pour créer un nouveau compte.</p>
+    <div class="overflow-hidden rounded-2xl border border-[#E7E5E1] bg-white">
+        <div class="border-b border-[#E7E5E1] bg-white px-5 py-6 sm:px-8">
+            <h2 class="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">Ajouter un Utilisateur</h2>
+            <p class="mt-1 text-sm text-gray-500">Remplissez les informations pour créer un nouveau compte.</p>
         </div>
 
-        <form action="{{ route('users.store') }}" method="POST" class="p-8 space-y-6">
+        <form action="{{ route('users.store') }}" method="POST" class="space-y-6 p-5 sm:p-8">
             @csrf
             
             @if ($errors->any())
                 <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
                     <div class="flex">
                         <div class="flex-shrink-0">
-                            <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+                            <x-icon name="circle-alert" class="text-red-500" />
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-red-700">
@@ -47,10 +47,10 @@
                     <label for="name" class="block text-sm font-semibold text-gray-700">Nom Complet</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-user text-gray-400"></i>
+                            <x-icon name="user-round" class="text-gray-400" />
                         </div>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required 
-                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden"
                             placeholder="Ex: Jean Dupont">
                     </div>
                 </div>
@@ -60,10 +60,10 @@
                     <label for="email" class="block text-sm font-semibold text-gray-700">Adresse Email</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-envelope text-gray-400"></i>
+                            <x-icon name="mail" class="text-gray-400" />
                         </div>
                         <input type="email" id="email" name="email" value="{{ old('email') }}" required 
-                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden"
                             placeholder="jean.dupont@example.com">
                     </div>
                 </div>
@@ -73,10 +73,10 @@
                     <label for="role" class="block text-sm font-semibold text-gray-700">Rôle / Fonction</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-shield-halved text-gray-400"></i>
+                            <x-icon name="shield-half" class="text-gray-400" />
                         </div>
                         <select id="role" name="role" required 
-                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none appearance-none">
+                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden appearance-none">
                             <option value="">Sélectionner un rôle</option>
                             <option value="administrateur" {{ old('role') == 'administrateur' ? 'selected' : '' }}>Administrateur</option>
                             <option value="comptable" {{ old('role') == 'comptable' ? 'selected' : '' }}>Comptable</option>
@@ -84,7 +84,7 @@
                             <option value="directeur" {{ old('role') == 'directeur' ? 'selected' : '' }}>Directeur</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                            <x-icon name="chevron-down" class="text-gray-400 size-3" />
                         </div>
                     </div>
                 </div>
@@ -94,10 +94,10 @@
                     <label for="phone" class="block text-sm font-semibold text-gray-700">Téléphone</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-phone text-gray-400"></i>
+                            <x-icon name="phone" class="text-gray-400" />
                         </div>
                         <input type="tel" id="phone" name="phone" value="{{ old('phone') }}"
-                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden"
                             placeholder="+226 XX XX XX XX">
                     </div>
                 </div>
@@ -107,10 +107,10 @@
                     <label for="password" class="block text-sm font-semibold text-gray-700">Mot de passe</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-lock text-gray-400"></i>
+                            <x-icon name="lock-keyhole" class="text-gray-400" />
                         </div>
                         <input type="password" id="password" name="password" required 
-                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden"
                             placeholder="••••••••">
                     </div>
                 </div>
@@ -120,10 +120,10 @@
                     <label for="password_confirmation" class="block text-sm font-semibold text-gray-700">Confirmer le mot de passe</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-lock text-gray-400"></i>
+                            <x-icon name="lock-keyhole" class="text-gray-400" />
                         </div>
                         <input type="password" id="password_confirmation" name="password_confirmation" required 
-                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden"
                             placeholder="••••••••">
                     </div>
                 </div>

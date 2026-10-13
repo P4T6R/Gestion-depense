@@ -1,6 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config '../../tailwind.config.js';
+@source '../views/**/*.blade.php';
+@source '../js/**/*.{js,vue}';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source inline('{bg,text,border}-{red,green,blue,yellow,gray}-{50,100,200,500,600,700,800}');
+
+/* Conserver les bordures et les curseurs des écrans existants lors du passage à Tailwind 4. */
+@layer base {
+    *, ::before, ::after, ::backdrop, ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+    button:not(:disabled), [role='button']:not([aria-disabled='true']) {
+        cursor: pointer;
+    }
+}
 
 /* Custom animations */
 @keyframes fadeUp {
@@ -61,4 +74,15 @@
     opacity: 0;
     transform: translateY(60px);
     transition: 0.8s ease-out;
+}
+
+/* Lucide SVGs are bundled with the app and inherit their surrounding text color. */
+@layer components {
+    .app-icon {
+        display: inline-block;
+        width: 1.125rem;
+        height: 1.125rem;
+        flex: none;
+        vertical-align: -0.2em;
+    }
 }

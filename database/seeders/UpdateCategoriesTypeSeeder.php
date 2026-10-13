@@ -21,9 +21,6 @@ class UpdateCategoriesTypeSeeder extends Seeder
             'Frais Administratifs Divers',
         ];
 
-        // D'abord, remettre tout en 'chantier'
-        DB::table('categories_depenses')->update(['type' => 'chantier']);
-
         // Puis marquer les catégories administratives
         DB::table('categories_depenses')
             ->whereIn('nom', $categoriesAdministratives)
@@ -32,7 +29,7 @@ class UpdateCategoriesTypeSeeder extends Seeder
         // Afficher le résumé
         $admin = DB::table('categories_depenses')->where('type', 'administrative')->count();
         $chantier = DB::table('categories_depenses')->where('type', 'chantier')->count();
-        
+
         $this->command->info('Types de catégories mis à jour avec succès !');
         $this->command->info("Catégories administratives: {$admin}");
         $this->command->info("Catégories de chantier: {$chantier}");

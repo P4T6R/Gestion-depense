@@ -14,6 +14,7 @@ class CategorieDepense extends Model
     protected $fillable = [
         'nom',
         'code',
+        'type',
         'description',
         'is_active',
     ];
@@ -23,14 +24,24 @@ class CategorieDepense extends Model
     ];
 
     // ========== RELATIONS ==========
-    
+
     public function depenses()
     {
         return $this->hasMany(Depense::class, 'categorie_id');
     }
 
+    public function lignes()
+    {
+        return $this->hasMany(LigneDepense::class, 'categorie_depense_id');
+    }
+
+    public function isUsed(): bool
+    {
+        return $this->depenses()->withTrashed()->exists() || $this->lignes()->exists();
+    }
+
     // ========== SCOPES ==========
-    
+
     public function scopeActives($query)
     {
         return $query->where('is_active', true);

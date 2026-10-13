@@ -1,33 +1,44 @@
-version: '3.8'
-
 services:
   # Application Laravel
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app
     container_name: suivi-depense-app
     restart: unless-stopped
     working_dir: /var/www
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:?Définir l’URL publique HTTPS}
+      SESSION_SECURE_COOKIE: "true"
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      APP_KEY: ${APP_KEY:?Définir une clé Laravel stable}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${MYSQL_DATABASE:-suivi_depense}
+      DB_USERNAME: ${MYSQL_USER:-suivi_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?Définir le mot de passe MySQL}
     volumes:
-      - app-data:/var/www
+      - app-storage:/var/www/storage
     networks:
       - suivi-depense
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   # Serveur Nginx
   nginx:
     build:
-      context: ./docker/nginx
+      context: .
       dockerfile: Dockerfile
+      target: web
     container_name: suivi-depense-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - app-data:/var/www:ro
+      - "${NGINX_BIND_ADDRESS:-127.0.0.1}:${NGINX_PORT:-8080}:80"
     networks:
       - suivi-depense
     depends_on:
@@ -39,30 +50,33 @@ services:
     container_name: suivi-depense-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: RootArts2026Secure!
-      MYSQL_DATABASE: suivi_depense
-      MYSQL_USER: suivi_user
-      MYSQL_PASSWORD: Arts2026Secure!
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Définir le mot de passe root MySQL}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-suivi_depense}
+      MYSQL_USER: ${MYSQL_USER:-suivi_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Définir le mot de passe MySQL}
     volumes:
       - dbdata:/var/lib/mysql
-    ports:
-      - "3306:3306"
     networks:
       - suivi-depense
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      start_period: 30s
+      retries: 20
     command: --default-authentication-plugin=mysql_native_password
 
   # phpMyAdmin (optionnel - pour gérer la base de données)
   phpmyadmin:
     image: phpmyadmin:latest
+    profiles: ["tools"]
     container_name: suivi-depense-phpmyadmin
     restart: unless-stopped
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
-      PMA_USER: suivi_user
-      PMA_PASSWORD: Arts2026Secure!
     ports:
-      - "8080:80"
+      - "127.0.0.1:8081:80"
     networks:
       - suivi-depense
     depends_on:
@@ -75,5 +89,5 @@ networks:
 volumes:
   dbdata:
     driver: local
-  app-data:
+  app-storage:
     driver: local

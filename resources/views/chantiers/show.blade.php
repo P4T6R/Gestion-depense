@@ -15,24 +15,24 @@
     </nav>
 
     <!-- En-tête avec actions -->
-    <div class="flex items-start justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">{{ $chantier->nom }}</h1>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">{{ $chantier->nom }}</h1>
             <p class="text-gray-600 mt-2">
-                <i class="fa-solid fa-location-dot text-[#E31E24] mr-2"></i>{{ $chantier->lieu }}
+                <x-icon name="map-pin" class="text-[#D7232A] mr-2" />{{ $chantier->lieu }}
             </p>
         </div>
         @if(auth()->user()->role === 'administrateur')
-        <div class="flex space-x-2">
-            <a href="{{ route('chantiers.edit', $chantier->id) }}" class="px-6 py-3 bg-orange-600 text-white font-bold rounded-xl shadow-lg hover:bg-orange-700 transition-all flex items-center space-x-2">
-                <i class="fa-solid fa-pen-to-square"></i>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('chantiers.edit', $chantier->id) }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50">
+                <x-icon name="square-pen" class="" />
                 <span>Modifier</span>
             </a>
             <form action="{{ route('chantiers.destroy', $chantier->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr ?')">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg hover:bg-red-700 transition-all flex items-center space-x-2">
-                    <i class="fa-solid fa-trash"></i>
+                <button type="submit" class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50">
+                    <x-icon name="trash-2" class="" />
                     <span>Supprimer</span>
                 </button>
             </form>
@@ -40,27 +40,27 @@
         @endif
     </div>
 
-    <div class="grid md:grid-cols-3 gap-6">
+    <div class="grid min-w-0 gap-6 md:grid-cols-3">
         <!-- Informations principales -->
-        <div class="md:col-span-2 space-y-6">
+        <div class="min-w-0 space-y-6 md:col-span-2">
             <!-- Card - Informations Générales -->
-            <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8">
                 <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fa-solid fa-info-circle text-[#E31E24] mr-3"></i>
+                    <x-icon name="info" class="text-[#D7232A] mr-3" />
                     Informations Générales
                 </h2>
                 <div class="space-y-4">
                     <div class="grid md:grid-cols-2 gap-4">
                         <div class="border-b border-gray-200 pb-4">
                             <p class="text-gray-600 text-sm">Date de Début</p>
-                            <p class="text-gray-900 font-semibold">{{ $chantier->date_debut->format('d/m/Y') }}</p>
+                            <p class="text-gray-900 font-semibold">{{ $chantier->date_debut?->format('d/m/Y') ?? 'N/A' }}</p>
                         </div>
                         <div class="border-b border-gray-200 pb-4">
                             <p class="text-gray-600 text-sm">Statut</p>
                             @php
                                 $statusColors = [
                                     'actif' => 'bg-green-100 text-green-700',
-                                    'suspendu' => 'bg-yellow-100 text-yellow-700',
+                                    'en_pause' => 'bg-yellow-100 text-yellow-700',
                                     'termine' => 'bg-gray-100 text-gray-700',
                                 ];
                                 $statusClass = $statusColors[$chantier->statut] ?? 'bg-gray-100 text-gray-700';
@@ -80,9 +80,9 @@
             </div>
 
             <!-- Card - Budget -->
-            <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8">
                 <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fa-solid fa-money-bill-wave text-green-500 mr-3"></i>
+                    <x-icon name="wallet" class="text-[#D7232A] mr-3" />
                     Budget & Dépenses
                 </h2>
                 <div class="space-y-4">
@@ -107,7 +107,7 @@
                             $percentageUsed = $chantier->budget_alloue > 0 ? ($chantier->budget_consomme / $chantier->budget_alloue) * 100 : 0;
                         @endphp
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full" style="width: {{ min($percentageUsed, 100) }}%"></div>
+                            <div class="h-2 rounded-full bg-[#D7232A]" style="width: {{ min($percentageUsed, 100) }}%"></div>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">{{ number_format($percentageUsed, 1) }}% consommé</p>
                     </div>
@@ -117,24 +117,24 @@
 
         <!-- Sidebar - Chef de Chantier -->
         <div class="space-y-6">
-            <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8">
                 <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fa-solid fa-user-tie text-orange-500 mr-3"></i>
+                    <x-icon name="user-round" class="text-[#D7232A] mr-3" />
                     Chef de Chantier
                 </h2>
                 @php
                     $chef = $chantier->chefsChantier->first();
                 @endphp
                 @if($chef)
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                <div class="flex min-w-0 items-center gap-4">
+                    <div class="flex size-12 items-center justify-center rounded-full bg-[#F8EEEE] text-lg font-bold text-[#C31F28]">
                         {{ substr($chef->name, 0, 1) }}
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <p class="font-semibold text-gray-900">{{ $chef->name }}</p>
-                        <p class="text-sm text-gray-600">{{ $chef->email }}</p>
+                        <p class="break-all text-sm text-gray-600">{{ $chef->email }}</p>
                         <p class="text-xs text-gray-500 mt-1">
-                            <i class="fa-solid fa-phone mr-1"></i>{{ $chef->phone ?? 'N/A' }}
+                            <x-icon name="phone" class="mr-1" />{{ $chef->phone ?? 'N/A' }}
                         </p>
                     </div>
                 </div>
@@ -144,15 +144,15 @@
             </div>
 
             <!-- Statistiques rapides -->
-            <div class="bg-gradient-to-br from-[#E31E24] to-[#C71A20] rounded-2xl shadow-lg p-8 text-white">
-                <h2 class="text-xl font-bold mb-6 flex items-center">
-                    <i class="fa-solid fa-chart-bar mr-3"></i>
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8">
+                <h2 class="mb-6 flex items-center text-xl font-bold text-gray-900">
+                    <x-icon name="chart-no-axes-column" class="mr-3" />
                     Dépenses
                 </h2>
                 <div class="space-y-4">
-                    <div class="bg-white/20 rounded-xl p-4">
-                        <p class="text-blue-100 text-sm">Total des Dépenses</p>
-                        <p class="text-2xl font-bold">{{ $chantier->depenses_count ?? 0 }}</p>
+                    <div class="rounded-xl bg-[#F7F6F3] p-4">
+                        <p class="text-sm text-gray-500">Total des dépenses</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $chantier->depenses_count }}</p>
                     </div>
                 </div>
             </div>
@@ -161,7 +161,7 @@
 
     <!-- Tableau des dépenses récentes -->
     @if($chantier->depenses->count() > 0)
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div class="overflow-hidden rounded-2xl border border-[#E7E5E1] bg-white">
         <div class="px-8 py-6 border-b border-gray-200">
             <h2 class="text-xl font-bold text-gray-900">Dernières Dépenses</h2>
         </div>
@@ -177,7 +177,7 @@
                 <tbody class="divide-y divide-gray-200">
                     @foreach($chantier->depenses->take(5) as $depense)
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 text-gray-900">{{ $depense->libelle ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-gray-900"><a href="{{ route('depenses.show', $depense) }}" class="font-medium hover:text-[#C31F28] hover:underline">{{ $depense->libelle ?? 'N/A' }}</a></td>
                         <td class="px-6 py-4 font-semibold text-gray-900">{{ number_format($depense->prix_total, 0, ',', ' ') }} F</td>
                         <td class="px-6 py-4 text-gray-600 text-sm">{{ $depense->created_at->format('d/m/Y') }}</td>
                     </tr>

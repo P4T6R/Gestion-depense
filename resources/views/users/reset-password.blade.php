@@ -13,13 +13,13 @@
         <span class="text-gray-900 font-medium">Réinitialiser mot de passe</span>
     </nav>
 
-    <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
-        <div class="bg-gradient-to-r from-[#E31E24] to-[#C71A20] px-8 py-6">
-            <h2 class="text-2xl font-bold text-white">Réinitialiser le Mot de Passe</h2>
-            <p class="text-blue-100 mt-1 text-sm">{{ $user->name }} ({{ $user->email }})</p>
+    <div class="overflow-hidden rounded-2xl border border-[#E7E5E1] bg-white">
+        <div class="border-b border-[#E7E5E1] bg-white px-5 py-6 sm:px-8">
+            <h2 class="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">Réinitialiser le Mot de Passe</h2>
+            <p class="mt-1 text-sm text-gray-500">{{ $user->name }} ({{ $user->email }})</p>
         </div>
 
-        <form action="{{ route('users.update-password', $user->id) }}" method="POST" class="p-8 space-y-6">
+        <form action="{{ route('users.update-password', $user->id) }}" method="POST" class="space-y-6 p-5 sm:p-8">
             @csrf
             @method('PUT')
             
@@ -27,7 +27,7 @@
                 <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
                     <div class="flex">
                         <div class="flex-shrink-0">
-                            <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+                            <x-icon name="circle-alert" class="text-red-500" />
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-red-700">Veuillez corriger les erreurs suivantes :</p>
@@ -46,10 +46,10 @@
                 <label for="password" class="block text-sm font-semibold text-gray-700">Nouveau Mot de Passe</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i class="fa-solid fa-lock text-gray-400"></i>
+                        <x-icon name="lock-keyhole" class="text-gray-400" />
                     </div>
                     <input type="password" id="password" name="password" required 
-                        class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                        class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden"
                         placeholder="••••••••">
                 </div>
                 <p class="text-xs text-gray-500 mt-1">Minimum 8 caractères</p>
@@ -60,10 +60,10 @@
                 <label for="password_confirmation" class="block text-sm font-semibold text-gray-700">Confirmer le Mot de Passe</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i class="fa-solid fa-lock text-gray-400"></i>
+                        <x-icon name="lock-keyhole" class="text-gray-400" />
                     </div>
                     <input type="password" id="password_confirmation" name="password_confirmation" required 
-                        class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                        class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden"
                         placeholder="••••••••">
                 </div>
             </div>

@@ -6,15 +6,22 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "autoprefixer": "^10.4.23",
+        "@tailwindcss/vite": "^4.3.3",
         "axios": "^1.6.4",
-        "laravel-vite-plugin": "^1.0.0",
-        "postcss": "^8.5.6",
-        "tailwindcss": "^3.4.19",
-        "vite": "^5.0.0"
+        "laravel-vite-plugin": "^2.0.0",
+        "tailwindcss": "^4.3.3",
+        "vite": "^7.3.0"
     },
     "dependencies": {
+        "@alpinejs/focus": "^3.14.3",
+        "@fontsource/inter": "^5.2.5",
+        "@fortawesome/fontawesome-free": "^6.4.0",
         "@vitejs/plugin-vue": "^6.0.3",
+        "alpinejs": "^3.14.3",
+        "pdfjs-dist": "^5.7.284",
         "vue": "^3.5.26"
+    },
+    "engines": {
+        "node": ">=22.12.0"
     }
 }

@@ -1,5 +1,5 @@
-# Image PHP 8.1 avec FPM
-FROM php:8.1-fpm
+# Image PHP 8.2 avec FPM
+FROM php:8.2-fpm AS app
 
 # Arguments
 ARG user=www
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Installer Node.js (pour le build Vite)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -30,18 +30,19 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Créer l'utilisateur système
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
+RUN useradd -G www-data -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
 # Définir le répertoire de travail
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 WORKDIR /var/www
 
 # Copier les fichiers du projet
 COPY . /var/www
 
-# Copier le fichier .env de production
-COPY .env.production /var/www/.env
+# Les secrets sont injectés au démarrage, jamais copiés dans l’image.
 
 # Installer les dépendances PHP
 RUN composer install --optimize-autoloader --no-dev
@@ -62,3 +63,10 @@ EXPOSE 9000
 
 # Utiliser l'entrypoint personnalisé
 ENTRYPOINT ["docker-entrypoint.sh"]
+
+# Nginx et PHP livrent les assets issus du même build ; aucun volume ne masque le code.
+FROM nginx:alpine AS web
+COPY --from=app /var/www/public /var/www/public
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

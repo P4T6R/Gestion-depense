@@ -1,66 +1,70 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Gestion des dépenses
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Application Laravel pour suivre les chantiers, factures multi-articles, justificatifs et budgets. Le chef de chantier saisit ses dépenses ; le directeur approuve ou rejette les factures en attente ; le comptable valide les factures approuvées. Après un rejet par le directeur ou la comptable, le créateur peut corriger la facture et l’enregistrer pour la soumettre de nouveau au directeur. Une correction effective ou un nouveau justificatif est exigé ; l’ancienne décision est effacée lors de la nouvelle soumission. L’approbation seule ne consomme pas le budget et ne permet pas de marquer la facture payée. Le budget consommé est mis à jour après validation comptable ; le parcours de paiement reste à définir. Le web et l’API partagent les mêmes validations, autorisations et services métier.
 
-## About Laravel
+Voir [la revue d’architecture et les corrections](docs/ARCHITECTURE-REVIEW.md).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Développement
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Prérequis : PHP 8.2 avec les extensions Laravel, PDO MySQL, BCMath, XMLWriter et ZIP ; Composer 2 ; MySQL 8 ; Node 22.12 minimum. Tailwind 4 nécessite un navigateur moderne.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+composer install
+npm ci
+cp .env.example .env
+php artisan key:generate
+```
 
-## Learning Laravel
+Configurer la connexion MySQL dans `.env`, puis :
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+php artisan migrate
+npm run build
+php artisan serve
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Pour une base locale vide, `php artisan db:seed` initialise les données de démonstration. Ne pas utiliser ces comptes en production ; le seeder de démonstration refuse l’environnement `production`. Ne pas utiliser `migrate:fresh` sur une base à conserver.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Dans le cloud configuré, les équivalents PHP/Composer sont `/workspace/cloud-setup/php` et `/workspace/cloud-setup/composer`. `bash /workspace/cloud-setup/start.sh` démarre le runtime local, applique les migrations et vérifie la connexion. Les tests doivent utiliser la base séparée :
 
-## Laravel Sponsors
+```bash
+DB_DATABASE=gestion_test APP_ENV=testing /workspace/cloud-setup/php artisan test
+npm run build
+npm audit
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+En dehors du cloud, préparer une base de tests dédiée, régler les variables correspondantes et lancer `php artisan test`. Les tests utilisent `RefreshDatabase` : ne jamais cibler les données réelles.
 
-### Premium Partners
+Les écrans Blade utilisent des icônes Lucide SVG locales via le composant `<x-icon>` ; les sources sélectionnées et leur licence sont dans `resources/icons`. Les couleurs d’interface sont définies dans les vues avec une palette gris chaud, charbon et rouge ARTS.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## Justificatifs et API
 
-## Contributing
+Les nouveaux justificatifs sont stockés dans `storage/app/private` et servis par une route authentifiée qui contrôle l’accès à la dépense. Ne pas exposer ce répertoire via Nginx ou un lien public. Pour les anciens fichiers :
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan justificatifs:protect --dry-run
+php artisan justificatifs:protect
+```
 
-## Code of Conduct
+La commande copie et compare les empreintes avant de modifier la référence et de supprimer l’ancienne copie publique. Elle refuse les conflits et signale les fichiers manquants. Sauvegarder les fichiers et la base avant cette migration.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Les montants agrégés de l’API sont des chaînes décimales exactes. L’étape d’approbation est `POST /api/depenses/{depense}/approve` avant la validation comptable. Les liens des justificatifs doivent passer par les routes protégées, jamais par `/storage/...` pour les nouveaux fichiers.
 
-## Security Vulnerabilities
+## Docker et production
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Définir au minimum `APP_KEY` (stable), `APP_URL` (HTTPS), `MYSQL_PASSWORD` et `MYSQL_ROOT_PASSWORD` dans la configuration d’exécution. Ne pas incorporer ces valeurs aux images. Compose exige ces variables. Les bases existantes conservent leurs identifiants : modifier une variable MySQL ne change pas le mot de passe déjà enregistré dans la base.
 
-## License
+Le build fournit les cibles `app` et `web` ; Nginx et PHP embarquent le même code. MySQL n’expose aucun port hôte. Le port HTTP Nginx est lié à `127.0.0.1:8080` par défaut ; placer un proxy HTTPS devant lui et renseigner ses adresses dans `TRUSTED_PROXIES`. Les cookies de session sont sécurisés. Vérifier ce montage en préproduction.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**Installation existante : migration du stockage avant démarrage.** L’ancien volume `app-data` contenait tout `/var/www` ; le nouveau volume `app-storage` ne contient que `/var/www/storage`. Identifier les noms effectifs des volumes avec `docker volume ls` et leur montage avec `docker inspect`, sauvegarder MySQL et l’ancien volume, arrêter les écritures, puis copier uniquement le contenu de son dossier `storage/` vers le nouveau volume de stockage. Préserver les justificatifs, fichiers privés et droits d’accès. Ne pas recopier l’ancien code ou son `vendor` sur la nouvelle image. Ne supprimer aucun ancien volume avant vérification et conservation d’une sauvegarde ; ne pas lancer `docker compose down -v`.
+
+Après préparation des secrets et du stockage :
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Le script d’entrée prépare les droits du stockage. Appliquer les migrations avec `docker compose exec --user www-data app php artisan migrate --force`. Exécuter ensuite la commande de protection des anciens fichiers dans le conteneur applicatif, puis tester les rôles, exports et uploads. Les migrations additives préservent les dépenses historiques ; leur retour arrière est refusé si cela détruirait des factures multi-articles ou les références privées.
+
+Cette revue a validé la syntaxe Docker/Compose et le runtime de développement. La construction et le déploiement des images de production restent à vérifier en préproduction.

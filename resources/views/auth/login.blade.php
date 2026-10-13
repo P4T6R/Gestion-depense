@@ -5,14 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - ARTS Constructions & Services</title>
     
-    <!-- Fonts & Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         body {
@@ -24,7 +17,7 @@
     
     <div class="flex min-h-screen">
         <!-- Panneau gauche - Rouge ARTS avec info -->
-        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#E31E24] to-[#C71A20] relative overflow-hidden">
+        <div class="hidden lg:flex lg:w-1/2 bg-linear-to-br from-[#E31E24] to-[#C71A20] relative overflow-hidden">
             <!-- Motif de fond décoratif -->
             <div class="absolute inset-0 opacity-10">
                 <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
@@ -81,7 +74,7 @@
                     @if ($errors->any())
                         <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
                             <div class="flex items-center">
-                                <i class="fa-solid fa-circle-exclamation text-red-500 mr-3"></i>
+                                <x-icon name="circle-alert" class="text-red-500 mr-3" />
                                 <p class="text-sm text-red-700 font-medium">
                                     {{ $errors->first() }}
                                 </p>
@@ -93,7 +86,7 @@
                     <div>
                         <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email professionnel</label>
                         <input type="email" id="email" name="email" value="{{ old('email') }}" required 
-                            class="w-full px-4 py-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E31E24] focus:border-transparent transition-all outline-none text-gray-900 placeholder-gray-400"
+                            class="w-full px-4 py-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E31E24] focus:border-transparent transition-all outline-hidden text-gray-900 placeholder-gray-400"
                             placeholder="votre@email.com">
                     </div>
 
@@ -102,10 +95,10 @@
                         <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Mot de passe</label>
                         <div class="relative">
                             <input type="password" id="password" name="password" required 
-                                class="w-full px-4 py-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E31E24] focus:border-transparent transition-all outline-none text-gray-900"
+                                class="w-full px-4 py-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E31E24] focus:border-transparent transition-all outline-hidden text-gray-900"
                                 placeholder="••••••••">
                             <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                <i class="fa-solid fa-eye" id="toggleIcon"></i>
+                                <x-icon name="eye" id="toggleEye" /><x-icon name="eye-off" id="toggleEyeOff" class="hidden" />
                             </button>
                         </div>
                     </div>
@@ -123,7 +116,7 @@
 
                     <!-- Submit Button -->
                     <button type="submit" 
-                        class="w-full bg-gradient-to-r from-[#E31E24] to-[#C71A20] text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 active:scale-95">
+                        class="w-full bg-linear-to-r from-[#E31E24] to-[#C71A20] text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 active:scale-95">
                         Se connecter
                     </button>
                 </form>
@@ -144,16 +137,17 @@
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('toggleIcon');
+            const toggleEye = document.getElementById('toggleEye');
+            const toggleEyeOff = document.getElementById('toggleEyeOff');
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
+                toggleEye.classList.add('hidden');
+                toggleEyeOff.classList.remove('hidden');
             } else {
                 passwordInput.type = 'password';
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
+                toggleEyeOff.classList.add('hidden');
+                toggleEye.classList.remove('hidden');
             }
         }
     </script>

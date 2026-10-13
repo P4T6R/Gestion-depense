@@ -13,6 +13,7 @@ class Justificatif extends Model
 
     protected $fillable = [
         'depense_id',
+        'disk',
         'nom_fichier',
         'chemin_fichier',
         'type_fichier',

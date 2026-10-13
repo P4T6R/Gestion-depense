@@ -43,7 +43,7 @@ class Depense extends Model
     ];
 
     // ========== RELATIONS ==========
-    
+
     public function chantier()
     {
         return $this->belongsTo(Chantier::class);
@@ -80,14 +80,14 @@ class Depense extends Model
     }
 
     // ========== MUTATEURS (Setters) ==========
-    
+
     // Recalculer le montant total depuis les lignes
     public function recalculerTotal(): void
     {
         $this->prix_total = $this->lignes()->sum('montant');
         $this->save();
     }
-    
+
     // Calcul automatique du prix total (pour compatibilité avec anciennes dépenses)
     protected static function boot()
     {
@@ -95,58 +95,55 @@ class Depense extends Model
 
         static::creating(function ($depense) {
             // Si pas de lignes et qu'on a quantité/prix_unitaire (ancien format)
-            if (is_null($depense->prix_total) && $depense->quantite && $depense->prix_unitaire) {
-                $depense->prix_total = $depense->quantite * $depense->prix_unitaire;
+            if (is_null($depense->prix_total) && $depense->quantite !== null && $depense->prix_unitaire !== null) {
+                $depense->prix_total = \App\Support\Amount::multiply((string) $depense->quantite, (string) $depense->prix_unitaire);
             }
         });
 
         static::updating(function ($depense) {
             // Recalculer si quantité ou prix unitaire change (ancien format)
-            if ($depense->isDirty(['quantite', 'prix_unitaire']) && $depense->quantite && $depense->prix_unitaire) {
-                $depense->prix_total = $depense->quantite * $depense->prix_unitaire;
+            if ($depense->isDirty(['quantite', 'prix_unitaire']) && $depense->quantite !== null && $depense->prix_unitaire !== null) {
+                $depense->prix_total = \App\Support\Amount::multiply((string) $depense->quantite, (string) $depense->prix_unitaire);
             }
         });
     }
 
     // ========== MÉTHODES DE VALIDATION ==========
-    
+
     public function valider(User $comptable): void
     {
-        if (!$comptable->isComptable() && !$comptable->isAdministrateur()) {
-            throw new \Exception('Seul un comptable peut valider une dépense');
-        }
-
-        $this->update([
-            'statut_validation' => 'validee',
-            'valide_par' => $comptable->id,
-            'valide_le' => now(),
-            'motif_rejet' => null,
-        ]);
-
-        // Mettre à jour le budget du chantier
-        $this->chantier->updateBudgetConsomme();
+        app(\App\Services\DepenseService::class)->validate($this, $comptable);
+        $this->refresh();
     }
 
     public function rejeter(User $comptable, string $motif): void
     {
-        if (!$comptable->isComptable() && !$comptable->isAdministrateur()) {
-            throw new \Exception('Seul un comptable peut rejeter une dépense');
-        }
+        app(\App\Services\DepenseService::class)->reject($this, $motif, $comptable);
+        $this->refresh();
+    }
 
-        if (empty($motif)) {
-            throw new \Exception('Un motif de rejet est obligatoire');
-        }
-
-        $this->update([
-            'statut_validation' => 'rejetee',
-            'valide_par' => $comptable->id,
-            'valide_le' => now(),
-            'motif_rejet' => $motif,
-        ]);
+    public function getLibelleAttribute(): string
+    {
+        return $this->nom_produit ?? $this->numero_facture ?? 'Facture #'.$this->id;
     }
 
     // ========== SCOPES (Filtres) ==========
-    
+
+    public function scopeInCategory($query, $categoryId)
+    {
+        return $query->where(fn ($q) => $q->where('categorie_id', $categoryId)
+            ->orWhereHas('lignes', fn ($lines) => $lines->where('categorie_depense_id', $categoryId)));
+    }
+
+    public function scopeVisibleTo($query, User $user)
+    {
+        if ($user->isChefChantier()) {
+            $query->where('user_id', $user->id)->whereHas('chantier.chefsChantier', fn ($q) => $q->where('users.id', $user->id));
+        }
+
+        return $query;
+    }
+
     public function scopeEnAttente($query)
     {
         return $query->where('statut_validation', 'en_attente');

@@ -9,28 +9,13 @@ class UniteMesureFactory extends Factory
 {
     protected $model = UniteMesure::class;
 
-    private static $units = ['kg', 'gramme', 'litre', 'millilitre', 'metre', 'centimetre', 'piece', 'm2', 'm3'];
-    private static $index = 0;
-
-    public function definition()
+    public function definition(): array
     {
-        $unit = self::$units[self::$index % count(self::$units)];
-        $symbol = match($unit) {
-            'kg' => 'kg',
-            'gramme' => 'g',
-            'litre' => 'l',
-            'millilitre' => 'ml',
-            'metre' => 'm',
-            'centimetre' => 'cm',
-            'piece' => 'pc',
-            'm2' => 'm²',
-            'm3' => 'm³',
-        };
-        self::$index++;
-        
+        // Un nombre arbitraire de fixtures doit respecter les index uniques de la table.
         return [
-            'nom' => $unit,
-            'symbole' => $symbol,
+            'nom' => 'Unité '.fake()->unique()->numerify('##########'),
+            'symbole' => fake()->unique()->bothify('u-##########'),
+            'is_active' => true,
         ];
     }
 }

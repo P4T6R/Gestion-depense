@@ -13,8 +13,8 @@
             <span class="text-gray-900 font-medium">Dépenses</span>
         </nav>
         @if(in_array(auth()->user()->role, ['chef_chantier', 'directeur']))
-        <a href="{{ route('depenses.create') }}" class="px-6 py-3 bg-gradient-to-r from-[#E31E24] to-[#C71A20] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-3">
-            <i class="fa-solid fa-plus"></i>
+        <a href="{{ route('depenses.create') }}" class="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#D7232A] px-5 py-2.5 font-semibold text-white transition-colors hover:bg-[#BA1E26]">
+            <x-icon name="plus" class="" />
             <span>Nouvelle Dépense</span>
         </a>
         @endif
@@ -24,7 +24,7 @@
     @if(session('success'))
     <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-xl">
         <div class="flex">
-            <i class="fa-solid fa-check-circle text-green-500 mt-0.5"></i>
+            <x-icon name="circle-check" class="text-green-500 mt-0.5" />
             <p class="ml-3 text-sm text-green-700">{{ session('success') }}</p>
         </div>
     </div>
@@ -32,63 +32,52 @@
 
     <!-- Statistiques rapides -->
     <div class="grid md:grid-cols-4 gap-4 mb-6">
-        @php
-            $stats = [
-                'en_attente' => $depenses->where('statut_validation', 'en_attente')->count(),
-                'montant_en_attente' => $depenses->where('statut_validation', 'en_attente')->sum('prix_total'),
-                'acceptee' => $depenses->where('statut_validation', 'acceptee')->count(),
-                'montant_acceptee' => $depenses->where('statut_validation', 'acceptee')->sum('prix_total'),
-                'validee' => $depenses->where('statut_validation', 'validee')->count(),
-                'montant_validee' => $depenses->where('statut_validation', 'validee')->sum('prix_total'),
-                'rejetee' => $depenses->where('statut_validation', 'rejetee')->count(),
-                'montant_rejetee' => $depenses->where('statut_validation', 'rejetee')->sum('prix_total'),
-            ];
-        @endphp
-        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl shadow-md hover:shadow-xl p-6 border-l-4 border-yellow-500 card-hover">
+
+        <div class="rounded-xl border border-[#E7E5E1] bg-white p-5">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-xs font-bold uppercase tracking-wide">En Attente</p>
-                    <p class="text-3xl font-extrabold text-yellow-700 mt-2">{{ $stats['en_attente'] }}</p>
+                    <p class="text-3xl font-extrabold text-[#232323] mt-2">{{ $stats['en_attente'] }}</p>
                     <p class="text-xs text-gray-600 mt-2 font-medium">{{ number_format($stats['montant_en_attente'], 0, ',', ' ') }} FCFA</p>
                 </div>
-                <div class="w-16 h-16 bg-yellow-500 bg-opacity-20 rounded-2xl flex items-center justify-center">
-                    <i class="fa-solid fa-hourglass-half text-3xl text-yellow-600"></i>
+                <div class="flex size-9 items-center justify-center rounded-lg bg-[#F7F6F3]">
+                    <x-icon name="hourglass" class="size-5 text-[#555]" />
                 </div>
             </div>
         </div>
-        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-md hover:shadow-xl p-6 border-l-4 border-[#E31E24] card-hover">
+        <div class="rounded-xl border border-[#E7E5E1] bg-white p-5">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-xs font-bold uppercase tracking-wide">Acceptées</p>
-                    <p class="text-3xl font-extrabold text-blue-700 mt-2">{{ $stats['acceptee'] }}</p>
+                    <p class="text-3xl font-extrabold text-[#232323] mt-2">{{ $stats['acceptee'] }}</p>
                     <p class="text-xs text-gray-600 mt-2 font-medium">{{ number_format($stats['montant_acceptee'], 0, ',', ' ') }} FCFA</p>
                 </div>
-                <div class="w-16 h-16 bg-[#E31E24] bg-opacity-20 rounded-2xl flex items-center justify-center">
-                    <i class="fa-solid fa-thumbs-up text-3xl text-[#E31E24]"></i>
+                <div class="flex size-9 items-center justify-center rounded-lg bg-[#F7F6F3]">
+                    <x-icon name="thumbs-up" class="size-5 text-[#555]" />
                 </div>
             </div>
         </div>
-        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-md hover:shadow-xl p-6 border-l-4 border-green-500 card-hover">
+        <div class="rounded-xl border border-[#E7E5E1] bg-white p-5">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-xs font-bold uppercase tracking-wide">Validées</p>
-                    <p class="text-3xl font-extrabold text-green-700 mt-2">{{ $stats['validee'] }}</p>
+                    <p class="text-3xl font-extrabold text-[#232323] mt-2">{{ $stats['validee'] }}</p>
                     <p class="text-xs text-gray-600 mt-2 font-medium">{{ number_format($stats['montant_validee'], 0, ',', ' ') }} FCFA</p>
                 </div>
-                <div class="w-16 h-16 bg-green-500 bg-opacity-20 rounded-2xl flex items-center justify-center">
-                    <i class="fa-solid fa-check-circle text-3xl text-green-600"></i>
+                <div class="flex size-9 items-center justify-center rounded-lg bg-[#F7F6F3]">
+                    <x-icon name="circle-check" class="size-5 text-[#555]" />
                 </div>
             </div>
         </div>
-        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl shadow-md hover:shadow-xl p-6 border-l-4 border-red-500 card-hover">
+        <div class="rounded-xl border border-[#E7E5E1] bg-white p-5">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-xs font-bold uppercase tracking-wide">Rejetées</p>
-                    <p class="text-3xl font-extrabold text-red-700 mt-2">{{ $stats['rejetee'] }}</p>
+                    <p class="text-3xl font-extrabold text-[#232323] mt-2">{{ $stats['rejetee'] }}</p>
                     <p class="text-xs text-gray-600 mt-2 font-medium">{{ number_format($stats['montant_rejetee'], 0, ',', ' ') }} FCFA</p>
                 </div>
-                <div class="w-16 h-16 bg-red-500 bg-opacity-20 rounded-2xl flex items-center justify-center">
-                    <i class="fa-solid fa-ban text-3xl text-red-600"></i>
+                <div class="flex size-9 items-center justify-center rounded-lg bg-[#F7F6F3]">
+                    <x-icon name="ban" class="size-5 text-[#555]" />
                 </div>
             </div>
         </div>
@@ -98,7 +87,7 @@
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-slide-in">
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-gradient-to-r from-[#E31E24] to-[#C71A20] text-white">
+                <thead class="bg-[#FAF9F7] text-[#444]">
                     <tr>
                         <th class="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">Produit</th>
                         <th class="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">Chantier</th>
@@ -113,24 +102,24 @@
                     <tr class="group transition-all duration-200">
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-gradient-to-br from-[#E31E24] to-[#C71A20] rounded-xl flex items-center justify-center text-white shadow-sm group-hover:shadow-md transition-shadow">
-                                    <i class="fa-solid fa-box text-lg"></i>
+                                <div class="w-12 h-12 bg-[#F8EEEE] rounded-xl flex items-center justify-center text-[#C31F28] shadow-xs group-hover:shadow-md transition-shadow">
+                                    <x-icon name="package" class="size-5" />
                                 </div>
                                 <div>
-                                    <span class="font-bold text-gray-900 text-sm block">{{ $depense->nom_produit }}</span>
+                                    <span class="font-bold text-gray-900 text-sm block">{{ $depense->libelle }}</span>
                                     <span class="text-xs text-gray-500">{{ $depense->categorie->nom ?? 'N/A' }}</span>
                                 </div>
                             </div>
                         </td>
                         <td class="px-8 py-5">
-                            <span class="text-sm text-gray-700 font-medium">{{ $depense->chantier->nom }}</span>
+                            <span class="text-sm text-gray-700 font-medium">{{ $depense->chantier?->nom ?? 'Chantier archivé' }}</span>
                         </td>
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">
-                                    {{ substr($depense->utilisateur->name, 0, 1) }}
+                                    {{ substr(($depense->utilisateur?->name ?? 'Utilisateur supprimé'), 0, 1) }}
                                 </div>
-                                <span class="text-sm text-gray-700">{{ $depense->utilisateur->name }}</span>
+                                <span class="text-sm text-gray-700">{{ ($depense->utilisateur?->name ?? 'Utilisateur supprimé') }}</span>
                             </div>
                         </td>
                         <td class="px-8 py-5 text-right">
@@ -153,36 +142,38 @@
                                 ];
                                 $statusClass = $statusColors[$depense->statut_validation] ?? 'bg-gray-100 text-gray-700';
                             @endphp
-                            <span class="px-4 py-2 rounded-lg text-xs font-bold {{ $statusClass }} inline-flex items-center gap-2 shadow-sm">
+                            <span class="px-4 py-2 rounded-lg text-xs font-bold {{ $statusClass }} inline-flex items-center gap-2 shadow-xs">
                                 @if($depense->statut_validation === 'en_attente')
-                                    <i class="fa-solid fa-clock"></i>
+                                    <x-icon name="clock-3" class="" />
                                 @elseif($depense->statut_validation === 'acceptee')
-                                    <i class="fa-solid fa-thumbs-up"></i>
+                                    <x-icon name="thumbs-up" class="" />
                                 @elseif($depense->statut_validation === 'validee')
-                                    <i class="fa-solid fa-circle-check"></i>
+                                    <x-icon name="circle-check" class="" />
                                 @else
-                                    <i class="fa-solid fa-ban"></i>
+                                    <x-icon name="ban" class="" />
                                 @endif
                                 {{ $statusLabels[$depense->statut_validation] ?? 'Inconnu' }}
                             </span>
                         </td>
                         <td class="px-8 py-5">
                             <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('depenses.show', $depense->id) }}" title="Voir détails" class="p-2.5 text-gray-600 hover:text-[#E31E24] hover:bg-red-50 rounded-lg transition-all duration-200">
-                                    <i class="fa-solid fa-eye"></i>
+                                <a href="{{ route('depenses.show', $depense->id) }}" title="Voir détails" class="p-2.5 text-[#555] hover:text-[#C31F28] hover:bg-[#F8EEEE] rounded-lg transition-all duration-200">
+                                    <x-icon name="eye" class="" />
                                 </a>
-                                @if(in_array(auth()->user()->role, ['chef_chantier', 'directeur']) && $depense->user_id === auth()->id() && $depense->statut_validation === 'en_attente')
-                                <a href="{{ route('depenses.edit', $depense->id) }}" title="Modifier" class="p-2.5 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200">
-                                    <i class="fa-solid fa-pen-to-square"></i>
+                                @can('update', $depense)
+                                <a href="{{ route('depenses.edit', $depense->id) }}" title="{{ $depense->statut_validation === 'rejetee' ? 'Corriger et soumettre à nouveau' : 'Modifier' }}" aria-label="{{ $depense->statut_validation === 'rejetee' ? 'Corriger et soumettre à nouveau' : 'Modifier' }} {{ $depense->libelle }}" class="p-2.5 text-[#555] hover:text-[#C31F28] hover:bg-[#F8EEEE] rounded-lg transition-all duration-200">
+                                    <x-icon name="square-pen" class="" />
                                 </a>
+                                @endcan
+                                @can('delete', $depense)
                                 <form action="{{ route('depenses.destroy', $depense->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette dépense ?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" title="Supprimer" class="p-2.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200">
-                                        <i class="fa-solid fa-trash"></i>
+                                        <x-icon name="trash-2" class="" />
                                     </button>
                                 </form>
-                                @endif
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -191,7 +182,7 @@
                         <td colspan="6" class="px-8 py-16 text-center">
                             <div class="flex flex-col items-center justify-center gap-4 animate-fade-in">
                                 <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i class="fa-solid fa-inbox text-4xl text-gray-400"></i>
+                                    <x-icon name="inbox" class="size-10 text-gray-400" />
                                 </div>
                                 <div>
                                     <p class="text-lg font-semibold text-gray-700">Aucune dépense trouvée</p>

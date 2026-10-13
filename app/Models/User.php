@@ -12,6 +12,8 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
+    protected $attributes = ['is_active' => true];
+
     protected $fillable = [
         'name',
         'email',
@@ -33,13 +35,13 @@ class User extends Authenticatable
     ];
 
     // ========== RELATIONS ==========
-    
+
     // Chantiers affectés (pour les chefs)
     public function chantiers()
     {
         return $this->belongsToMany(Chantier::class, 'chantier_user')
-                    ->withTimestamps()
-                    ->withPivot('affecte_le');
+            ->withTimestamps()
+            ->withPivot('affecte_le');
     }
 
     // Dépenses créées
@@ -55,7 +57,7 @@ class User extends Authenticatable
     }
 
     // ========== MÉTHODES DE VÉRIFICATION RÔLE ==========
-    
+
     public function isAdministrateur(): bool
     {
         return $this->role === 'administrateur';
@@ -79,6 +81,10 @@ class User extends Authenticatable
     // Vérifier l'accès à un chantier
     public function hasAccessToChantier($chantierId): bool
     {
+        if (! $this->is_active) {
+            return false;
+        }
+
         // Admin, Comptable, Directeur : accès à tous les chantiers
         if ($this->isAdministrateur() || $this->isComptable() || $this->isDirecteur()) {
             return true;

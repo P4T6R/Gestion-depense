@@ -2,59 +2,51 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Depense;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDepenseRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    use ValidatesDepenseAmounts;
+
     public function authorize(): bool
     {
-        return in_array($this->user()->role, ['chef_chantier', 'directeur']);
+        return $this->user()?->can('create', Depense::class) ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
+    protected function prepareForValidation(): void
+    {
+        if (! $this->is('api/*')) {
+            $this->merge([
+                'statut_paiement' => $this->input('statut_paiement', 'non_paye'),
+                'statut_livraison' => $this->input('statut_livraison', 'non_livre'),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'chantier_id' => 'required|exists:chantiers,id',
+            'chantier_id' => ['required', 'integer', Rule::exists('chantiers', 'id')->whereNull('deleted_at')],
             'nom_produit' => 'required|string|max:255',
-            'quantite' => 'required|numeric|min:0.01',
-            'prix_unitaire' => 'required|numeric|min:0.01',
-            'unite_id' => 'required|exists:unites_mesure,id',
-            'categorie_id' => 'required|exists:categories_depenses,id',
-            'observations' => 'nullable|string|max:1000',
+            'quantite' => 'required|numeric|decimal:0,2|min:0.01|max:99999999.99',
+            'prix_unitaire' => 'required|numeric|decimal:0,2|min:0|max:9999999999999.99',
+            'unite_id' => ['required', 'integer', Rule::exists('unites_mesure', 'id')->where('is_active', true)],
+            'categorie_id' => ['required', 'integer', Rule::exists('categories_depenses', 'id')->where('is_active', true)->where('type', $this->user()->isDirecteur() ? 'administrative' : 'chantier')],
+            'observations' => 'nullable|string|max:10000',
             'id_produit' => 'nullable|string|max:100',
-            'justificatif' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
-        ];
+            'statut_paiement' => 'required|in:paye,non_paye',
+            'statut_livraison' => 'required|in:livre,non_livre',
+        ] + self::attachmentRules();
     }
 
-    /**
-     * Get custom error messages for validation rules.
-     */
-    public function messages(): array
+    public static function attachmentRules(): array
     {
         return [
-            'chantier_id.required' => 'Veuillez sélectionner un chantier.',
-            'chantier_id.exists' => 'Le chantier sélectionné n\'existe pas.',
-            'nom_produit.required' => 'Le nom du produit est obligatoire.',
-            'nom_produit.max' => 'Le nom du produit ne peut pas dépasser 255 caractères.',
-            'quantite.required' => 'La quantité est obligatoire.',
-            'quantite.numeric' => 'La quantité doit être un nombre.',
-            'quantite.min' => 'La quantité doit être supérieure à 0.',
-            'prix_unitaire.required' => 'Le prix unitaire est obligatoire.',
-            'prix_unitaire.numeric' => 'Le prix unitaire doit être un nombre.',
-            'prix_unitaire.min' => 'Le prix unitaire doit être supérieur à 0.',
-            'unite_id.required' => 'Veuillez sélectionner une unité de mesure.',
-            'unite_id.exists' => 'L\'unité sélectionnée n\'existe pas.',
-            'categorie_id.required' => 'Veuillez sélectionner une catégorie.',
-            'categorie_id.exists' => 'La catégorie sélectionnée n\'existe pas.',
-            'justificatif.file' => 'Le justificatif doit être un fichier.',
-            'justificatif.mimes' => 'Le justificatif doit être au format JPEG, JPG, PNG ou PDF.',
-            'justificatif.max' => 'Le justificatif ne peut pas dépasser 5 Mo.',
+            'justificatif' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
+            'justificatifs' => 'nullable|array|max:20',
+            'justificatifs.*' => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
         ];
     }
 }

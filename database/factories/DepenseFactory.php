@@ -17,8 +17,8 @@ class DepenseFactory extends Factory
         $prixUnitaire = $this->faker->numberBetween(1000, 100000);
 
         return [
-            'chantier_id' => 1,
-            'user_id' => 1,
+            'chantier_id' => \App\Models\Chantier::factory(),
+            'user_id' => \App\Models\User::factory(),
             'id_produit' => $this->faker->bothify('PROD-####'),
             'nom_produit' => $this->faker->word(),
             'unite_id' => UniteMesure::factory(),
@@ -27,7 +27,7 @@ class DepenseFactory extends Factory
             'prix_total' => $quantite * $prixUnitaire,
             'categorie_id' => CategorieDepense::factory(),
             'observations' => $this->faker->sentence(),
-            'statut_paiement' => $this->faker->randomElement(['paye', 'non_paye']),
+            'statut_paiement' => 'non_paye',
             'statut_livraison' => $this->faker->randomElement(['livre', 'non_livre']),
             'statut_validation' => 'en_attente',
         ];

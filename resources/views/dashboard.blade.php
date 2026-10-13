@@ -1,7 +1,10 @@
 @extends('layouts.admin')
 
 @section('title', 'Dashboard - StratAction Consulting')
-@section('header', 'Tableau de Bord')
+@section('header', auth()->user()?->role === 'administrateur' ? 'Vue d’ensemble' : 'Tableau de bord')
+@if(auth()->user()?->role === 'administrateur')
+@section('header-subtitle', 'Suivi de vos chantiers et dépenses')
+@endif
 
 @section('content')
     @if(auth()->user()->role === 'administrateur' || auth()->user()->role === 'directeur')
@@ -14,7 +17,7 @@
             <div class="bg-red-50 border-l-4 border-red-600 p-4 rounded-r-xl shadow-md">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
+                        <x-icon name="triangle-alert" class="text-red-600 size-5" />
                     </div>
                     <div class="ml-3">
                         <p class="text-sm text-red-700 font-bold">
@@ -27,170 +30,62 @@
         @endif
     @endif
 
-    <!-- DASHBOARD ADMINISTRATEUR -->
     @if(auth()->user()->role === 'administrateur')
-        <!-- Première Ligne: KPIs Principaux -->
-        <div class="grid md:grid-cols-4 gap-6 mb-6">
-            <!-- Utilisateurs -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all hover:-translate-y-1">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm font-medium">Utilisateurs</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['total_utilisateurs'] }}</p>
-                    </div>
-                    <div class="bg-blue-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-users text-2xl text-blue-500"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chantiers -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-indigo-500 hover:shadow-xl transition-all hover:-translate-y-1">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm font-medium">Chantiers</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['total_chantiers'] }}</p>
-                    </div>
-                    <div class="bg-indigo-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-building text-2xl text-indigo-500"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dépenses Total -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all hover:-translate-y-1">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm font-medium">Dépenses (Nb)</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['total_depenses'] }}</p>
-                    </div>
-                    <div class="bg-green-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-list-check text-2xl text-green-500"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Montant Total -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all hover:-translate-y-1">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm font-medium">Montant Total</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-2">{{ number_format($stats['total_montant_depenses'], 0, ',', ' ') }} F</p>
-                    </div>
-                    <div class="bg-purple-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-money-bill-wave text-2xl text-purple-500"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Deuxième Ligne: Statuts des Dépenses -->
-        <div class="mb-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Détail des Statuts des Dépenses</h2>
-            <div class="grid md:grid-cols-4 gap-6">
-                <!-- En Attente -->
-                <div class="bg-yellow-50 rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-xl transition-all">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <p class="text-gray-600 font-medium">En Attente</p>
-                            <i class="fa-solid fa-hourglass-half text-yellow-500"></i>
-                        </div>
-                        <p class="text-2xl font-bold text-yellow-700">{{ $stats['depenses_en_attente'] }}</p>
-                        <p class="text-sm text-gray-600">{{ number_format($stats['montant_en_attente'], 0, ',', ' ') }} F</p>
-                    </div>
-                </div>
-
-                <!-- Acceptées -->
-                <div class="bg-blue-50 rounded-2xl shadow-lg p-6 border-l-4 border-[#E31E24] hover:shadow-xl transition-all">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <p class="text-gray-600 font-medium">Acceptées</p>
-                            <i class="fa-solid fa-thumbs-up text-[#E31E24]"></i>
-                        </div>
-                        <p class="text-2xl font-bold text-blue-700">{{ $stats['depenses_acceptees'] }}</p>
-                        <p class="text-sm text-gray-600">{{ number_format($stats['montant_acceptees'], 0, ',', ' ') }} F</p>
-                    </div>
-                </div>
-
-                <!-- Validées -->
-                <div class="bg-green-50 rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <p class="text-gray-600 font-medium">Validées</p>
-                            <i class="fa-solid fa-check-circle text-green-500"></i>
-                        </div>
-                        <p class="text-2xl font-bold text-green-700">{{ $stats['depenses_validees'] }}</p>
-                        <p class="text-sm text-gray-600">{{ number_format($stats['montant_validees'], 0, ',', ' ') }} F</p>
-                    </div>
-                </div>
-
-                <!-- Rejetées -->
-                <div class="bg-red-50 rounded-2xl shadow-lg p-6 border-l-4 border-red-500 hover:shadow-xl transition-all">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <p class="text-gray-600 font-medium">Rejetées</p>
-                            <i class="fa-solid fa-times-circle text-red-500"></i>
-                        </div>
-                        <p class="text-2xl font-bold text-red-700">{{ $stats['depenses_rejetees'] }}</p>
-                        <p class="text-sm text-gray-600">{{ number_format($stats['montant_rejetees'], 0, ',', ' ') }} F</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @include('dashboard.admin')
 
     <!-- DASHBOARD CHEF DE CHANTIER -->
     @elseif(auth()->user()->role === 'chef_chantier')
-        <div class="grid md:grid-cols-4 gap-6 mb-6">
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-[#E31E24] hover:shadow-xl transition-all hover:-translate-y-1">
+        <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Mes Chantiers</p>
                         <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['mes_chantiers'] }}</p>
                     </div>
-                    <div class="bg-blue-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-building text-2xl text-[#E31E24]"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="building-2" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Mes Dépenses</p>
                         <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['mes_depenses'] }}</p>
                     </div>
-                    <div class="bg-green-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-list-check text-2xl text-green-500"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="list-checks" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-600 text-sm font-medium">Montant Total</p>
+                        <p class="text-gray-600 text-sm font-medium">Montant déclaré</p>
                         <p class="text-2xl font-bold text-gray-900 mt-2">{{ number_format($stats['montant_total'], 0, ',', ' ') }} F</p>
                     </div>
-                    <div class="bg-purple-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-money-bill-wave text-2xl text-purple-500"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="wallet" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Budget Utilisé</p>
                         <p class="text-2xl font-bold text-gray-900 mt-2">
                             @php
                                 $totalChantiers = $chantiersActifs->sum('budget_alloue');
-                                $percentage = $totalChantiers > 0 ? ($stats['montant_total'] / $totalChantiers) * 100 : 0;
+                                $percentage = $totalChantiers > 0 ? ($chantiersActifs->sum('budget_consomme') / $totalChantiers) * 100 : 0;
                             @endphp
                             {{ number_format($percentage, 1) }}%
                         </p>
                     </div>
-                    <div class="bg-yellow-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-chart-pie text-2xl text-yellow-500"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="chart-pie" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
@@ -203,7 +98,7 @@
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
                             <p class="text-gray-600 font-medium">En Attente</p>
-                            <i class="fa-solid fa-hourglass-half text-yellow-500"></i>
+                            <x-icon name="hourglass" class="text-[#D7232A]" />
                         </div>
                         <p class="text-2xl font-bold text-yellow-700">{{ $stats['depenses_en_attente'] }}</p>
                         <p class="text-sm text-gray-600">{{ number_format($stats['montant_en_attente'], 0, ',', ' ') }} F</p>
@@ -214,7 +109,7 @@
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
                             <p class="text-gray-600 font-medium">Acceptées</p>
-                            <i class="fa-solid fa-thumbs-up text-[#E31E24]"></i>
+                            <x-icon name="thumbs-up" class="text-[#D7232A]" />
                         </div>
                         <p class="text-2xl font-bold text-blue-700">{{ $stats['depenses_acceptees'] }}</p>
                         <p class="text-sm text-gray-600">{{ number_format($stats['montant_acceptees'], 0, ',', ' ') }} F</p>
@@ -225,7 +120,7 @@
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
                             <p class="text-gray-600 font-medium">Validées</p>
-                            <i class="fa-solid fa-check-circle text-green-500"></i>
+                            <x-icon name="circle-check" class="text-green-500" />
                         </div>
                         <p class="text-2xl font-bold text-green-700">{{ $stats['depenses_validees'] }}</p>
                         <p class="text-sm text-gray-600">{{ number_format($stats['montant_validees'], 0, ',', ' ') }} F</p>
@@ -236,7 +131,7 @@
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
                             <p class="text-gray-600 font-medium">Rejetées</p>
-                            <i class="fa-solid fa-times-circle text-red-500"></i>
+                            <x-icon name="circle-x" class="text-red-500" />
                         </div>
                         <p class="text-2xl font-bold text-red-700">{{ $stats['depenses_rejetees'] }}</p>
                         <p class="text-sm text-gray-600">{{ number_format($stats['montant_rejetees'], 0, ',', ' ') }} F</p>
@@ -247,54 +142,55 @@
 
     <!-- DASHBOARD DIRECTEUR -->
     @elseif(auth()->user()->role === 'directeur')
-        <div class="grid md:grid-cols-4 gap-6 mb-6">
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-[#E31E24] hover:shadow-xl transition-all hover:-translate-y-1">
+        <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Total Chantiers</p>
                         <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['total_chantiers'] }}</p>
                     </div>
-                    <div class="bg-blue-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-building text-2xl text-[#E31E24]"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="building-2" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-yellow-50 rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">À Approuver</p>
-                        <p class="text-3xl font-bold text-yellow-700 mt-2">{{ $stats['a_approuver'] }}</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['a_approuver'] }}</p>
                         <p class="text-sm text-gray-600 mt-1">{{ number_format($stats['montant_a_approuver'], 0, ',', ' ') }} F</p>
                     </div>
-                    <div class="bg-yellow-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-hourglass-half text-2xl text-yellow-500"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="hourglass" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-blue-50 rounded-2xl shadow-lg p-6 border-l-4 border-[#E31E24] hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Approuvées</p>
-                        <p class="text-3xl font-bold text-blue-700 mt-2">{{ $stats['approuvees'] }}</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['approuvees'] }}</p>
                         <p class="text-sm text-gray-600 mt-1">{{ number_format($stats['montant_approuvees'], 0, ',', ' ') }} F</p>
+                        <p class="text-xs text-gray-500 mt-1">En attente de la comptable</p>
                     </div>
-                    <div class="bg-blue-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-check-circle text-2xl text-[#E31E24]"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="circle-check" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-green-50 rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Validées</p>
-                        <p class="text-3xl font-bold text-green-700 mt-2">{{ $stats['validees'] }}</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['validees'] }}</p>
                         <p class="text-sm text-gray-600 mt-1">{{ number_format($stats['montant_validees'], 0, ',', ' ') }} F</p>
                     </div>
-                    <div class="bg-green-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-stamp text-2xl text-green-500"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="stamp" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
@@ -302,65 +198,66 @@
 
     <!-- DASHBOARD COMPTABLE -->
     @elseif(auth()->user()->role === 'comptable')
-        <div class="grid md:grid-cols-4 gap-6 mb-6">
-            <div class="bg-yellow-50 rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-xl transition-all hover:-translate-y-1">
+        <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">À Valider</p>
-                        <p class="text-3xl font-bold text-yellow-700 mt-2">{{ $stats['a_valider'] }}</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['a_valider'] }}</p>
                         <p class="text-sm text-gray-600 mt-1">{{ number_format($stats['montant_a_valider'], 0, ',', ' ') }} F</p>
                     </div>
-                    <div class="bg-yellow-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-hourglass-half text-2xl text-yellow-500"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="hourglass" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-green-50 rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Validées</p>
-                        <p class="text-3xl font-bold text-green-700 mt-2">{{ $stats['validees'] }}</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['validees'] }}</p>
                         <p class="text-sm text-gray-600 mt-1">{{ number_format($stats['montant_validees'], 0, ',', ' ') }} F</p>
                     </div>
-                    <div class="bg-green-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-check-circle text-2xl text-green-500"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="circle-check" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-red-50 rounded-2xl shadow-lg p-6 border-l-4 border-red-500 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Rejetées</p>
-                        <p class="text-3xl font-bold text-red-700 mt-2">{{ $stats['rejetees'] }}</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['rejetees'] }}</p>
                         <p class="text-sm text-gray-600 mt-1">{{ number_format($stats['montant_rejetees'], 0, ',', ' ') }} F</p>
                     </div>
-                    <div class="bg-red-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-times-circle text-2xl text-red-500"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="circle-x" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-indigo-500 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div class="rounded-2xl border border-[#E7E5E1] bg-white p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Total Validé</p>
                         <p class="text-2xl font-bold text-gray-900 mt-2">{{ number_format($stats['montant_validees'], 0, ',', ' ') }} F</p>
                     </div>
-                    <div class="bg-indigo-100 p-4 rounded-xl">
-                        <i class="fa-solid fa-money-bill-wave text-2xl text-[#E31E24]"></i>
+                    <div class="rounded-xl bg-[#F8EEEE] p-3">
+                        <x-icon name="wallet" class="size-6 text-[#D7232A]" />
                     </div>
                 </div>
             </div>
         </div>
     @endif
 
+    @if(auth()->user()->role !== 'administrateur')
     <div class="grid lg:grid-cols-2 gap-8">
         <!-- Dernières Dépenses -->
-        <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Dernières Dépenses</h2>
+                <h2 class="text-2xl font-bold text-gray-900">{{ auth()->user()->role === 'directeur' ? 'Factures à décider' : 'Dernières dépenses' }}</h2>
                 <a href="{{ route('depenses.index') }}" class="text-[#E31E24] hover:text-[#E31E24] font-semibold text-sm">
                     Voir tout →
                 </a>
@@ -368,14 +265,14 @@
 
             <div class="space-y-4">
                 @forelse($depensesRecentes as $depense)
-                <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:shadow-md transition-all">
-                    <div class="flex items-center flex-1">
-                        <div class="w-10 h-10 bg-gradient-to-br from-[#E31E24] to-[#C71A20] rounded-full flex items-center justify-center text-white font-bold mr-3 shadow-sm">
+                <div class="flex flex-col gap-3 rounded-xl border border-gray-100 p-4 transition-colors hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex min-w-0 flex-1 items-center">
+                        <div class="w-10 h-10 bg-linear-to-br from-[#E31E24] to-[#C71A20] rounded-full flex items-center justify-center text-white font-bold mr-3 shadow-xs">
                             {{ substr($depense->utilisateur->name, 0, 1) }}
                         </div>
-                        <div class="flex-1">
-                            <div class="flex items-center">
-                                <p class="font-bold text-gray-900 text-sm mr-2">{{ $depense->nom_produit }}</p>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="{{ route('depenses.show', $depense) }}" class="mr-2 text-sm font-bold text-gray-900 hover:text-[#C31F28] hover:underline">{{ $depense->libelle }}</a>
                                 @php
                                     $statusColors = [
                                         'en_attente' => 'bg-yellow-100 text-yellow-700',
@@ -397,9 +294,12 @@
                             <p class="text-xs text-gray-500">{{ $depense->chantier->nom }} • {{ $depense->utilisateur->name }}</p>
                         </div>
                     </div>
-                    <div class="text-right">
+                    <div class="text-left sm:text-right">
                         <p class="font-black text-gray-900">{{ number_format($depense->prix_total, 0, ',', ' ') }} F</p>
-                        <span class="text-[10px] text-gray-400 font-bold uppercase">{{ $depense->created_at->diffForHumans() }}</span>
+                        <span class="block text-[10px] text-gray-400 font-bold uppercase">{{ $depense->created_at->diffForHumans() }}</span>
+                        @if(auth()->user()->role === 'directeur')
+                            <a href="{{ route('depenses.show', $depense) }}" class="mt-2 inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-[#C31F28] hover:underline">Examiner <x-icon name="chevron-right" class="size-4" /></a>
+                        @endif
                     </div>
                 </div>
                 @empty
@@ -409,7 +309,7 @@
         </div>
 
         <!-- Chantiers Actifs -->
-        <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold text-gray-900">Suivi des Budgets</h2>
                 <a href="{{ route('chantiers.index') }}" class="text-[#E31E24] hover:text-[#E31E24] font-semibold text-sm">
@@ -443,11 +343,11 @@
                         'depassement' => 'DÉPASSEMENT'
                     ][$statut] ?? 'INCONNU';
                 @endphp
-                <div class="p-4 border border-gray-100 rounded-xl hover:shadow-md transition-all">
+                <div class="rounded-xl border border-gray-100 p-4 transition-colors hover:bg-gray-50">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center">
-                            <div class="w-10 h-10 {{ $colorClass }} rounded-lg flex items-center justify-center mr-3 shadow-sm">
-                                <i class="fa-solid fa-building text-white"></i>
+                            <div class="mr-3 flex size-10 items-center justify-center rounded-lg bg-[#F8EEEE]">
+                                <x-icon name="building-2" class="text-[#D7232A]" />
                             </div>
                             <div>
                                 <p class="font-bold text-gray-900">{{ $chantier->nom }}</p>
@@ -455,7 +355,7 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-black px-2 py-1 rounded {{ str_replace('bg-', 'bg-opacity-10 text-', $colorClass) }} {{ $textClass }}">
+                            <span class="text-xs font-bold {{ $textClass }}">
                                 {{ $label }}
                             </span>
                             <p class="text-sm font-bold text-gray-900 mt-1">{{ number_format($pourcentage, 1) }}%</p>
@@ -483,38 +383,5 @@
         </div>
     </div>
 
-    <!-- Actions rapides (Admin seulement) -->
-    @if(auth()->user()->role === 'administrateur')
-    <div class="mt-8 grid md:grid-cols-3 gap-6">
-        <a href="{{ route('chantiers.create') }}" class="bg-gradient-to-br from-[#E31E24] to-[#C71A20] text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-xl font-bold mb-2">Nouveau Chantier</h3>
-                    <p class="text-blue-100">Créer un nouveau chantier</p>
-                </div>
-                <i class="fa-solid fa-plus text-4xl text-white/50 group-hover:scale-110 transition-transform"></i>
-            </div>
-        </a>
-
-        <a href="{{ route('users.create') }}" class="bg-gradient-to-br from-[#E31E24] to-[#C71A20] text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-xl font-bold mb-2">Gérer Utilisateurs</h3>
-                    <p class="text-blue-100">Ajouter ou modifier des utilisateurs</p>
-                </div>
-                <i class="fa-solid fa-users text-4xl text-white/50 group-hover:scale-110 transition-transform"></i>
-            </div>
-        </a>
-
-        <a href="{{ route('depenses.rapports') }}" class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-xl font-bold mb-2">Rapports</h3>
-                    <p class="text-green-100">Voir les statistiques détaillées</p>
-                </div>
-                <i class="fa-solid fa-chart-pie text-4xl text-white/50 group-hover:scale-110 transition-transform"></i>
-            </div>
-        </a>
-    </div>
     @endif
 @endsection

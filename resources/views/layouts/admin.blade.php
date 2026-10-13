@@ -3,179 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'StratAction Consulting')</title>
-    
-    <!-- Fonts & Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Alpine.js - Version stable -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
-
-    <style>
-        [x-cloak] { display: none !important; }
-        
-        /* Animations fluides */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .animate-slide-in {
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out;
-        }
-        
-        /* Hover amélioré pour les cartes */
-        .card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        
-        /* Effet de ligne de tableau */
-        tbody tr {
-            transition: all 0.2s ease;
-        }
-        
-        tbody tr:hover {
-            background: linear-gradient(to right, rgba(227, 30, 36, 0.03), transparent);
-            transform: scale(1.01);
-        }
-    </style>
+    <title>@yield('title', 'ARTS Construction & Services')</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="bg-gray-100 font-sans antialiased" x-data="{ isSidebarOpen: true }">
-    
-    <!-- Sidebar -->
-    <div :class="isSidebarOpen ? 'w-64' : 'w-20'" class="fixed inset-y-0 left-0 bg-[#3D3D3D] text-white transition-all duration-150 z-50 hidden md:block">
-        <div class="flex items-center justify-center h-24 px-4 border-b border-white/10">
-            <div class="w-full flex justify-center" x-show="isSidebarOpen" x-transition>
-                <img src="/images/arts-logo.png" class="h-16 w-auto" alt="ARTS Constructions & Services">
-            </div>
-            <button @click="isSidebarOpen = !isSidebarOpen" class="p-2 hover:bg-white/10 rounded-lg" x-show="!isSidebarOpen">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-        </div>
-        
-        <!-- Toggle button when open -->
-        <div class="px-4 py-2" x-show="isSidebarOpen">
-            <button @click="isSidebarOpen = !isSidebarOpen" class="w-full p-2 hover:bg-white/10 rounded-lg text-center">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-        </div>
-        
-        <nav class="mt-6 px-4 space-y-2">
-            <!-- Dashboard - Visible à tous -->
-            <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 p-3 {{ request()->routeIs('dashboard') ? 'bg-[#E31E24]' : 'hover:bg-white/10' }} rounded-xl text-white transition">
-                <i class="fa-solid fa-chart-line w-6"></i>
-                <span x-show="isSidebarOpen">Dashboard</span>
-            </a>
-
-            <!-- Chantiers - Admin, Chef, Directeur -->
-            @if(in_array(auth()->user()->role, ['administrateur', 'chef_chantier', 'directeur']))
-            <a href="{{ route('chantiers.index') }}" class="flex items-center space-x-3 p-3 {{ request()->routeIs('chantiers.*') ? 'bg-[#E31E24]' : 'hover:bg-white/10' }} rounded-xl text-white transition">
-                <i class="fa-solid fa-building w-6"></i>
-                <span x-show="isSidebarOpen">Chantiers</span>
-            </a>
-            @endif
-
-            <!-- Dépenses - Tous sauf comptable (qui voit depuis dashboard) -->
-            @if(in_array(auth()->user()->role, ['administrateur', 'chef_chantier', 'directeur', 'comptable']))
-            <a href="{{ route('depenses.index') }}" class="flex items-center space-x-3 p-3 {{ request()->routeIs('depenses.index') || request()->routeIs('depenses.show') || request()->routeIs('depenses.create') || request()->routeIs('depenses.edit') ? 'bg-[#E31E24]' : 'hover:bg-white/10' }} rounded-xl text-white transition">
-                <i class="fa-solid fa-money-bill-transfer w-6"></i>
-                <span x-show="isSidebarOpen">Dépenses</span>
-            </a>
-            @endif
-
-            <!-- Rapports - Admin et Comptable -->
-            @if(in_array(auth()->user()->role, ['administrateur', 'comptable']))
-            <a href="{{ route('depenses.rapports') }}" class="flex items-center space-x-3 p-3 {{ request()->routeIs('depenses.rapports') ? 'bg-[#E31E24]' : 'hover:bg-white/10' }} rounded-xl text-white transition">
-                <i class="fa-solid fa-chart-bar w-6"></i>
-                <span x-show="isSidebarOpen">Rapports</span>
-            </a>
-            @endif
-
-            <!-- Utilisateurs - Admin seulement -->
-            @if(auth()->user()->role === 'administrateur')
-            <a href="{{ route('users.index') }}" class="flex items-center space-x-3 p-3 {{ request()->routeIs('users.*') ? 'bg-[#E31E24]' : 'hover:bg-white/10' }} rounded-xl text-white transition">
-                <i class="fa-solid fa-users w-6"></i>
-                <span x-show="isSidebarOpen">Utilisateurs</span>
-            </a>
-            @endif
-
-            <!-- Admin Section - Admin seulement -->
-            @if(auth()->user()->role === 'administrateur')
-            <div class="pt-4 mt-4 border-t border-white/10">
-                <p class="text-xs font-bold text-gray-300 uppercase px-3 mb-3" x-show="isSidebarOpen">Administration</p>
-                <a href="{{ route('categories.index') }}" class="flex items-center space-x-3 p-3 {{ request()->routeIs('categories.*') ? 'bg-[#E31E24]' : 'hover:bg-white/10' }} rounded-xl text-white transition text-sm">
-                    <i class="fa-solid fa-tag w-6"></i>
-                    <span x-show="isSidebarOpen">Catégories</span>
+@php
+    $role = auth()->user()->role;
+    $navigation = [
+        ['label' => 'Tableau de bord', 'icon' => 'layout-dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'roles' => ['administrateur', 'chef_chantier', 'directeur', 'comptable']],
+        ['label' => 'Chantiers', 'icon' => 'building-2', 'route' => 'chantiers.index', 'match' => 'chantiers.*', 'roles' => ['administrateur', 'chef_chantier', 'directeur']],
+        ['label' => 'Dépenses', 'icon' => 'receipt', 'route' => 'depenses.index', 'match' => 'depenses.index', 'roles' => ['administrateur', 'chef_chantier', 'directeur', 'comptable']],
+        ['label' => 'Rapports', 'icon' => 'chart-no-axes-column', 'route' => 'depenses.rapports', 'match' => 'depenses.rapports', 'roles' => ['administrateur', 'comptable']],
+        ['label' => 'Utilisateurs', 'icon' => 'users-round', 'route' => 'users.index', 'match' => 'users.*', 'roles' => ['administrateur']],
+    ];
+    $adminNavigation = [
+        ['label' => 'Catégories', 'icon' => 'tag', 'route' => 'categories.index', 'match' => 'categories.*'],
+        ['label' => 'Unités', 'icon' => 'scale', 'route' => 'unites.index', 'match' => 'unites.*'],
+    ];
+@endphp
+<body class="min-h-screen bg-[#F7F6F3] text-[#232323] antialiased" x-data="{ mobileNavOpen: false, profileOpen: false }" @keydown.escape.window="mobileNavOpen = false; profileOpen = false">
+    <aside class="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-[#E7E5E1] bg-[#FCFBF9] md:flex">
+        <a href="{{ route('dashboard') }}" class="flex h-26 items-center px-6" aria-label="ARTS, accueil">
+            <img src="/images/arts-logo.png" class="h-16 w-auto" alt="ARTS Construction & Services">
+        </a>
+        <nav class="flex-1 space-y-1 px-4 pt-4" aria-label="Navigation principale">
+            @foreach($navigation as $item)
+                @continue(! in_array($role, $item['roles']))
+                @php
+                    $active = request()->routeIs($item['match']) || ($item['route'] === 'dashboard' && request()->is('dashboard')) || ($item['route'] === 'depenses.index' && request()->routeIs('depenses.*') && ! request()->routeIs('depenses.rapports'));
+                @endphp
+                <a href="{{ route($item['route']) }}" @if($active) aria-current="page" @endif
+                   class="flex min-h-11 items-center gap-3 border-l-2 px-4 py-2.5 text-sm font-medium transition-colors {{ $active ? 'border-[#D7232A] bg-[#F8EEEE] text-[#C31F28]' : 'border-transparent text-[#444] hover:bg-[#F2F0EC] hover:text-[#232323]' }}">
+                    <x-icon :name="$item['icon']" class="size-5" />
+                    <span>{{ $item['label'] }}</span>
                 </a>
-                <a href="{{ route('unites.index') }}" class="flex items-center space-x-3 p-3 {{ request()->routeIs('unites.*') ? 'bg-[#E31E24]' : 'hover:bg-white/10' }} rounded-xl text-white transition text-sm">
-                    <i class="fa-solid fa-scale-balanced w-6"></i>
-                    <span x-show="isSidebarOpen">Unités</span>
-                </a>
-            </div>
+            @endforeach
+            @if($role === 'administrateur')
+                <p class="mt-7 border-t border-[#E7E5E1] px-4 pt-6 text-[11px] font-semibold uppercase tracking-wider text-[#777]">Administration</p>
+                @foreach($adminNavigation as $item)
+                    @php $active = request()->routeIs($item['match']); @endphp
+                    <a href="{{ route($item['route']) }}" @if($active) aria-current="page" @endif
+                       class="flex min-h-11 items-center gap-3 border-l-2 px-4 py-2.5 text-sm font-medium transition-colors {{ $active ? 'border-[#D7232A] bg-[#F8EEEE] text-[#C31F28]' : 'border-transparent text-[#444] hover:bg-[#F2F0EC] hover:text-[#232323]' }}">
+                        <x-icon :name="$item['icon']" class="size-5" />
+                        <span>{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
             @endif
         </nav>
+    </aside>
+
+    <div x-cloak x-show="mobileNavOpen" class="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div class="absolute inset-0 bg-[#232323]/45" @click="mobileNavOpen = false"></div>
+        <aside x-trap.inert.noscroll="mobileNavOpen" class="relative flex h-full w-[min(18rem,85vw)] flex-col bg-[#FCFBF9] shadow-xl" @click.outside="mobileNavOpen = false">
+            <div class="flex h-20 items-center justify-between px-5">
+                <img src="/images/arts-logo.png" class="h-14 w-auto" alt="ARTS Construction & Services">
+                <button type="button" @click="mobileNavOpen = false" aria-label="Fermer le menu" class="rounded-lg p-2 text-[#444] hover:bg-[#F2F0EC]"><x-icon name="x" class="size-5" /></button>
+            </div>
+            <nav class="space-y-1 px-4 pt-3" aria-label="Navigation mobile">
+                @foreach($navigation as $item)
+                    @continue(! in_array($role, $item['roles']))
+                    @php
+                        $active = request()->routeIs($item['match']) || ($item['route'] === 'dashboard' && request()->is('dashboard')) || ($item['route'] === 'depenses.index' && request()->routeIs('depenses.*') && ! request()->routeIs('depenses.rapports'));
+                    @endphp
+                    <a href="{{ route($item['route']) }}" @if($active) aria-current="page" @endif class="flex min-h-11 items-center gap-3 border-l-2 px-4 py-2.5 text-sm {{ $active ? 'border-[#D7232A] bg-[#F8EEEE] font-semibold text-[#C31F28]' : 'border-transparent text-[#444]' }}">
+                        <x-icon :name="$item['icon']" class="size-5" />{{ $item['label'] }}
+                    </a>
+                @endforeach
+                @if($role === 'administrateur')
+                    <p class="mt-6 border-t border-[#E7E5E1] px-4 pt-5 text-[11px] font-semibold uppercase tracking-wider text-[#777]">Administration</p>
+                    @foreach($adminNavigation as $item)
+                        @php $active = request()->routeIs($item['match']); @endphp
+                        <a href="{{ route($item['route']) }}" @if($active) aria-current="page" @endif class="flex min-h-11 items-center gap-3 border-l-2 px-4 py-2.5 text-sm {{ $active ? 'border-[#D7232A] bg-[#F8EEEE] font-semibold text-[#C31F28]' : 'border-transparent text-[#444]' }}">
+                            <x-icon :name="$item['icon']" class="size-5" />{{ $item['label'] }}
+                        </a>
+                    @endforeach
+                @endif
+            </nav>
+            <form action="{{ route('logout') }}" method="POST" class="mt-auto border-t border-[#E7E5E1] p-4">
+                @csrf
+                <button type="submit" class="flex min-h-11 w-full items-center gap-3 rounded-lg px-4 py-2.5 text-left text-sm font-medium text-[#444] hover:bg-[#F2F0EC]">
+                    <x-icon name="log-out" class="size-5" />Déconnexion
+                </button>
+            </form>
+        </aside>
     </div>
 
-    <!-- Main Content -->
-    <div :class="isSidebarOpen ? 'md:ml-64' : 'md:ml-20'" class="transition-all duration-150 min-h-screen">
-        <!-- Header -->
-        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 sticky top-0 z-40">
-            <h1 class="text-xl font-bold text-gray-800">@yield('header', 'Tableau de Bord')</h1>
-            
-            <div class="flex items-center space-x-4">
-                <button class="p-2 text-gray-400 hover:text-[#E31E24] transition">
-                    <i class="fa-solid fa-bell"></i>
-                </button>
-                <div class="flex items-center space-x-3 border-l pl-4">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-gray-900">{{ auth()->user()->name ?? 'Utilisateur' }}</p>
-                        <p class="text-xs text-gray-500">{{ ucfirst(auth()->user()->role ?? 'Invité') }}</p>
-                    </div>
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="w-10 h-10 bg-[#E31E24] rounded-full flex items-center justify-center text-white font-bold hover:bg-[#C71A20] transition">
-                            {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
+    <div class="min-h-screen md:pl-60">
+        <header class="border-b border-[#E7E5E1] bg-[#FCFBF9]">
+            <div class="mx-auto flex min-h-20 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-7">
+                <div class="hidden min-w-0 md:block">
+                    <h1 class="truncate text-2xl font-semibold tracking-tight text-[#232323]">@yield('header', 'Tableau de bord')</h1>
+                    @hasSection('header-subtitle')<p class="mt-0.5 text-sm text-[#6D6D6D]">@yield('header-subtitle')</p>@endif
+                </div>
+                <a href="{{ route('dashboard') }}" class="md:hidden" aria-label="ARTS, accueil"><img src="/images/arts-logo.png" class="h-12 w-auto" alt="ARTS Construction & Services"></a>
+                <div class="ml-auto flex items-center gap-3 sm:gap-5">
+                    @if(request()->routeIs('dashboard') || request()->is('dashboard'))
+                        <time datetime="{{ now()->toDateString() }}" class="hidden text-sm text-[#555] sm:inline">{{ now()->locale('fr')->isoFormat('D MMM YYYY') }}</time>
+                    @endif
+                    <div class="relative hidden border-l border-[#E7E5E1] pl-5 md:block">
+                        <button type="button" @click="profileOpen = !profileOpen" :aria-expanded="profileOpen" aria-label="Ouvrir le menu du profil" class="flex items-center gap-3 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D7232A]">
+                            <span class="flex size-9 items-center justify-center rounded-full bg-[#D7232A] text-sm font-semibold text-white">{{ mb_substr(auth()->user()->name ?? 'U', 0, 1) }}</span>
+                            <span class="hidden lg:block"><span class="block text-sm font-semibold leading-tight">{{ auth()->user()->name }}</span><span class="block text-xs text-[#777]">{{ ucfirst(str_replace('_', ' ', $role)) }}</span></span>
+                            <x-icon name="chevron-down" class="size-4 text-[#777]" />
                         </button>
-                        
-                        <div x-show="open" @click.away="open = false" x-cloak
-                            class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#E31E24]">
-                                <i class="fa-solid fa-user-gear mr-2"></i> Profil
-                            </a>
-                            <hr class="my-2 border-gray-100">
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                    <i class="fa-solid fa-right-from-bracket mr-2"></i> Déconnexion
-                                </button>
+                        <div x-cloak x-show="profileOpen" @click.outside="profileOpen = false" class="absolute right-0 top-full z-50 mt-3 w-48 rounded-xl border border-[#E7E5E1] bg-white p-1.5 shadow-lg">
+                            <form action="{{ route('logout') }}" method="POST">@csrf
+                                <button type="submit" class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-[#F7F6F3]"><x-icon name="log-out" class="size-4" />Déconnexion</button>
                             </form>
                         </div>
                     </div>
+                    <button type="button" class="rounded-lg p-2 text-[#333] hover:bg-[#F2F0EC] md:hidden" @click="mobileNavOpen = true" aria-label="Ouvrir le menu" :aria-expanded="mobileNavOpen"><x-icon name="menu" class="size-6" /></button>
                 </div>
             </div>
         </header>
-
-        <!-- Dashboard Content -->
-        <main class="p-8">
-            @yield('content')
-        </main>
+        <main class="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-7">@yield('content')</main>
     </div>
-
 </body>
 </html>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Chantier;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ChantierController extends Controller
 {
@@ -15,13 +16,13 @@ class ChantierController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        
+
         $query = Chantier::with(['createur', 'chefsChantier'])
-                         ->withCount(['depenses', 'depensesValidees', 'depensesEnAttente']);
+            ->withCount(['depenses', 'depensesValidees', 'depensesEnAttente']);
 
         // Si chef de chantier, ne voir que ses chantiers
         if ($user->isChefChantier()) {
-            $query->whereHas('chefsChantier', function($q) use ($user) {
+            $query->whereHas('chefsChantier', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             });
         }
@@ -41,7 +42,7 @@ class ChantierController extends Controller
      */
     public function store(Request $request)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -49,11 +50,11 @@ class ChantierController extends Controller
             'nom' => 'required|string|max:255',
             'lieu' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'budget_alloue' => 'required|numeric|min:0',
+            'budget_alloue' => 'required|numeric|decimal:0,2|min:0|max:9999999999999.99',
             'date_debut' => 'nullable|date',
             'date_fin' => 'nullable|date|after_or_equal:date_debut',
             'chef_chantier_ids' => 'nullable|array',
-            'chef_chantier_ids.*' => 'exists:users,id',
+            'chef_chantier_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->where('role', 'chef_chantier')->where('is_active', true)->whereNull('deleted_at')],
         ]);
 
         $chantier = Chantier::create([
@@ -90,17 +91,14 @@ class ChantierController extends Controller
         $user = $request->user();
 
         // Vérifier l'accès
-        if (!$user->hasAccessToChantier($chantier->id)) {
+        if (! $user->hasAccessToChantier($chantier->id)) {
             return response()->json(['message' => 'Accès refusé'], 403);
         }
 
         $chantier->load([
             'createur',
             'chefsChantier',
-            'depenses.utilisateur',
-            'depenses.justificatifs',
-            'depenses.categorie',
-            'depenses.unite'
+            'depenses' => fn ($q) => $q->visibleTo($user)->with(['utilisateur', 'justificatifs', 'categorie', 'unite']),
         ]);
 
         return response()->json($chantier);
@@ -111,7 +109,7 @@ class ChantierController extends Controller
      */
     public function update(Request $request, Chantier $chantier)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -119,9 +117,9 @@ class ChantierController extends Controller
             'nom' => 'sometimes|string|max:255',
             'lieu' => 'sometimes|nullable|string|max:255',
             'description' => 'sometimes|nullable|string',
-            'budget_alloue' => 'sometimes|numeric|min:0',
+            'budget_alloue' => 'sometimes|numeric|decimal:0,2|min:0|max:9999999999999.99',
             'date_debut' => 'sometimes|nullable|date',
-            'date_fin' => 'sometimes|nullable|date',
+            'date_fin' => 'sometimes|nullable|date|after_or_equal:'.($request->input('date_debut') ?? $chantier->date_debut?->format('Y-m-d') ?? '1900-01-01'),
             'statut' => 'sometimes|in:actif,en_pause,termine,archive',
         ]);
 
@@ -138,19 +136,19 @@ class ChantierController extends Controller
      */
     public function affecterChef(Request $request, Chantier $chantier)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'chef_chantier')->where('is_active', true)->whereNull('deleted_at')],
         ]);
 
         $chef = User::findOrFail($validated['user_id']);
 
-        if (!$chef->isChefChantier()) {
+        if (! $chef->isChefChantier()) {
             return response()->json([
-                'message' => 'Cet utilisateur n\'est pas un chef de chantier'
+                'message' => 'Cet utilisateur n\'est pas un chef de chantier',
             ], 422);
         }
 
@@ -163,7 +161,7 @@ class ChantierController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
@@ -173,7 +171,7 @@ class ChantierController extends Controller
      */
     public function retirerChef(Request $request, Chantier $chantier, User $chef)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -189,7 +187,7 @@ class ChantierController extends Controller
      */
     public function destroy(Request $request, Chantier $chantier)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -207,7 +205,7 @@ class ChantierController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->hasAccessToChantier($chantier->id)) {
+        if (! $user->hasAccessToChantier($chantier->id)) {
             return response()->json(['message' => 'Accès refusé'], 403);
         }
 

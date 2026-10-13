@@ -111,7 +111,7 @@ onMounted(() => {
     </div>
 
     <!-- MAIN NAV -->
-    <nav class="bg-white shadow-sm py-3 sticky top-0 z-50">
+    <nav class="bg-white shadow-xs py-3 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex items-center justify-between">
           <!-- Logo -->
@@ -134,7 +134,7 @@ onMounted(() => {
               <a href="/login" class="text-blue-600 hover:text-blue-500 transition font-medium text-sm">
                 Connexion
               </a>
-              <a href="/register" class="px-4 py-2 rounded-full font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 shadow-md text-sm">
+              <a href="/register" class="px-4 py-2 rounded-full font-semibold text-white bg-linear-to-r from-blue-500 to-blue-600 shadow-md text-sm">
                 S'inscrire
               </a>
             </div>
@@ -242,7 +242,7 @@ onMounted(() => {
 
             <!-- CTA Buttons -->
             <div class="flex flex-col sm:flex-row justify-center gap-6 pt-8">
-              <a href="/register" class="group relative bg-gradient-to-r from-blue-500 to-blue-600 text-white px-10 py-5 rounded-xl text-lg font-bold hover:shadow-2xl transition hover:scale-105 overflow-hidden inline-block">
+              <a href="/register" class="group relative bg-linear-to-r from-blue-500 to-blue-600 text-white px-10 py-5 rounded-xl text-lg font-bold hover:shadow-2xl transition hover:scale-105 overflow-hidden inline-block">
                 <span class="relative z-10 flex items-center justify-center gap-2">
                   Commencer Maintenant
                   <svg class="w-5 h-5 group-hover:translate-x-2 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,7 +281,7 @@ onMounted(() => {
     </div>
 
     <!-- Director Message Section -->
-    <div class="py-24 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+    <div class="py-24 bg-linear-to-b from-gray-50 to-white relative overflow-hidden">
       <div class="flex justify-center mb-12">
         <div class="relative inline-block text-center">
           <h2 class="text-3xl font-bold text-gray-900">StratAction Consulting</h2>
@@ -336,7 +336,7 @@ onMounted(() => {
                 </div>
                 
                 <div class="flex items-start group/item hover:translate-x-2 transition">
-                  <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-4">
+                  <div class="flex-shrink-0 w-10 h-10 bg-linear-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-4">
                     <span class="text-white font-bold">3</span>
                   </div>
                   <span class="text-gray-900 font-semibold pt-2">
@@ -345,7 +345,7 @@ onMounted(() => {
                 </div>
               </div>
               
-              <div class="bg-gradient-to-r from-blue-50 to-transparent p-6 rounded-xl border-l-4 border-blue-500">
+              <div class="bg-linear-to-r from-blue-50 to-transparent p-6 rounded-xl border-l-4 border-blue-500">
                 <p class="text-gray-700 italic font-medium text-lg">
                   StratAction s'est donné pour mission d'accompagner vos structures.
                 </p>

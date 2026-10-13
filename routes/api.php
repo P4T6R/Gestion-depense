@@ -16,11 +16,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 // ========== ROUTES PUBLIQUES ==========
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 // ========== ROUTES PROTÉGÉES (Authentification requise) ==========
-Route::middleware('auth:sanctum')->group(function () {
-    
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
+
+    Route::get('/justificatifs/{justificatif}', \App\Http\Controllers\JustificatifController::class)->name('api.justificatifs.show');
+
     // ---------- AUTHENTIFICATION ----------
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -53,11 +55,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{chantier}', [ChantierController::class, 'show']);
         Route::put('/{chantier}', [ChantierController::class, 'update']);
         Route::delete('/{chantier}', [ChantierController::class, 'destroy']);
-        
+
         // Gestion des chefs de chantier
         Route::post('/{chantier}/affecter-chef', [ChantierController::class, 'affecterChef']);
         Route::delete('/{chantier}/retirer-chef/{chef}', [ChantierController::class, 'retirerChef']);
-        
+
         // Statistiques du chantier
         Route::get('/{chantier}/statistiques', [ChantierController::class, 'statistiques']);
     });
@@ -71,7 +73,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{depense}', [DepenseController::class, 'show']);
         Route::put('/{depense}', [DepenseController::class, 'update']);
         Route::delete('/{depense}', [DepenseController::class, 'destroy']);
-        
+
+        Route::post('/{depense}/approve', [DepenseController::class, 'approve']);
+
         // Validation comptable
         Route::post('/{depense}/valider', [DepenseController::class, 'valider']);
         Route::post('/{depense}/rejeter', [DepenseController::class, 'rejeter']);

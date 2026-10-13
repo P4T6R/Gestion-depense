@@ -75,11 +75,8 @@ class DashboardController extends Controller
             ->get();
 
         // Dépenses par catégorie
-        $depensesParCategorie = Depense::select('categorie_id', DB::raw('SUM(prix_total) as total'))
-            ->where('statut_validation', 'validee')
-            ->groupBy('categorie_id')
-            ->with('categorie')
-            ->get();
+        $depensesParCategorie = app(\App\Services\ExpenseReportingService::class)
+            ->byCategory(Depense::where('statut_validation', 'validee')->get())->values();
 
         return response()->json([
             'stats' => $stats,
@@ -94,14 +91,14 @@ class DashboardController extends Controller
      */
     private function dashboardChef(User $chef)
     {
-        $chantiers = $chef->chantiers()->with(['depenses'])->get();
+        $chantiers = $chef->chantiers()->get();
 
         $stats = [
             'mes_chantiers' => $chantiers->count(),
-            'mes_depenses_total' => $chef->depenses()->count(),
-            'mes_depenses_en_attente' => $chef->depenses()->where('statut_validation', 'en_attente')->count(),
-            'mes_depenses_validees' => $chef->depenses()->where('statut_validation', 'validee')->count(),
-            'mes_depenses_rejetees' => $chef->depenses()->where('statut_validation', 'rejetee')->count(),
+            'mes_depenses_total' => Depense::visibleTo($chef)->count(),
+            'mes_depenses_en_attente' => Depense::visibleTo($chef)->where('statut_validation', 'en_attente')->count(),
+            'mes_depenses_validees' => Depense::visibleTo($chef)->where('statut_validation', 'validee')->count(),
+            'mes_depenses_rejetees' => Depense::visibleTo($chef)->where('statut_validation', 'rejetee')->count(),
         ];
 
         $chantiersDetails = $chantiers->map(function ($chantier) {
@@ -116,7 +113,7 @@ class DashboardController extends Controller
             ];
         });
 
-        $depensesRecentes = $chef->depenses()
+        $depensesRecentes = Depense::visibleTo($chef)
             ->with(['chantier', 'categorie', 'unite'])
             ->latest()
             ->take(10)
@@ -139,20 +136,16 @@ class DashboardController extends Controller
             'annee' => 'required|integer|min:2020',
         ]);
 
-        $depenses = Depense::whereMonth('created_at', $validated['mois'])
+        $depenses = Depense::visibleTo($request->user())->whereMonth('created_at', $validated['mois'])
             ->whereYear('created_at', $validated['annee'])
             ->where('statut_validation', 'validee')
             ->get();
 
         $stats = [
             'total_depenses' => $depenses->count(),
-            'montant_total' => $depenses->sum('prix_total'),
-            'par_categorie' => $depenses->groupBy('categorie_id')->map(function ($items) {
-                return [
-                    'count' => $items->count(),
-                    'total' => $items->sum('prix_total'),
-                ];
-            }),
+            'montant_total' => \App\Support\Amount::sum($depenses->pluck('prix_total')),
+            'par_categorie' => app(\App\Services\ExpenseReportingService::class)->byCategory($depenses)
+                ->map(fn ($group) => ['count' => $group['count'], 'total' => $group['total']]),
         ];
 
         return response()->json($stats);

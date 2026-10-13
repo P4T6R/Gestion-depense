@@ -19,6 +19,7 @@ class UserController extends Controller
         }
 
         $users = User::all();
+
         return view('users.index', compact('users'));
     }
 
@@ -56,7 +57,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
-            'phone' => $validated['phone'],
+            'phone' => $validated['phone'] ?? null,
             'is_active' => true,
         ]);
 
@@ -86,7 +87,7 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'role' => 'required|string|in:administrateur,comptable,chef_chantier,directeur',
             'phone' => 'nullable|string|max:20',
         ]);
@@ -105,8 +106,9 @@ class UserController extends Controller
             abort(403, 'Seul un administrateur peut désactiver un utilisateur.');
         }
 
-        $user->update(['is_active' => !$user->is_active]);
+        $user->update(['is_active' => ! $user->is_active]);
         $message = $user->is_active ? 'Utilisateur activé.' : 'Utilisateur désactivé.';
+
         return redirect()->route('users.index')->with('success', $message);
     }
 
@@ -150,6 +152,7 @@ class UserController extends Controller
         }
 
         $user->delete();
+
         return redirect()->route('users.index')->with('success', 'Utilisateur supprimé avec succès.');
     }
 }

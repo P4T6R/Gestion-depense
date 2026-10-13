@@ -3,22 +3,11 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class CategoriesUnitesSeeder extends Seeder
 {
     public function run(): void
     {
-        // Désactiver les contraintes de clés étrangères
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-
-        // Vider les tables avant de les remplir
-        DB::table('categories_depenses')->truncate();
-        DB::table('unites_mesure')->truncate();
-
-        // Réactiver les contraintes
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
         // Catégories de dépenses
         $categories = [
             ['nom' => 'Matériaux construction', 'code' => 'MAT', 'description' => 'Ciment, fer, sable, etc.'],
@@ -32,7 +21,7 @@ class CategoriesUnitesSeeder extends Seeder
         ];
 
         foreach ($categories as $cat) {
-            DB::table('categories_depenses')->insert([
+            \App\Models\CategorieDepense::firstOrCreate(['code' => $cat['code']], [
                 'nom' => $cat['nom'],
                 'code' => $cat['code'],
                 'description' => $cat['description'],
@@ -61,7 +50,7 @@ class CategoriesUnitesSeeder extends Seeder
         ];
 
         foreach ($unites as $unite) {
-            DB::table('unites_mesure')->insert([
+            \App\Models\UniteMesure::firstOrCreate(['symbole' => $unite['symbole']], [
                 'nom' => $unite['nom'],
                 'symbole' => $unite['symbole'],
                 'description' => null,
@@ -69,6 +58,22 @@ class CategoriesUnitesSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+        }
+
+        $administratives = [
+            'AO_ACHAT' => "Appel d'Offre - Achat Dossier",
+            'AO_MONTAGE' => "Appel d'Offre - Montage Dossier",
+            'ENREG_MARCHE' => 'Enregistrement de Marché',
+            'ASSUR_CAUT' => 'Assurances & Cautions',
+            'FRAIS_ADMIN' => 'Frais Administratifs Divers',
+        ];
+        foreach ($administratives as $code => $nom) {
+            $categorie = \App\Models\CategorieDepense::firstOrCreate(['code' => $code], [
+                'nom' => $nom, 'type' => 'administrative', 'is_active' => true,
+            ]);
+            if ($categorie->type !== 'administrative') {
+                $categorie->update(['type' => 'administrative']);
+            }
         }
 
         $this->command->info('[OK] Catégories et unités créées avec succès !');

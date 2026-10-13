@@ -30,13 +30,14 @@ class CategorieDepenseController extends Controller
      */
     public function store(Request $request)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $validated = $request->validate([
             'nom' => 'required|string|max:255|unique:categories_depenses,nom',
-            'code' => 'required|string|max:10|unique:categories_depenses,code',
+            'code' => 'required|string|max:50|unique:categories_depenses,code',
+            'type' => 'sometimes|in:chantier,administrative',
             'description' => 'nullable|string',
             'is_active' => 'sometimes|boolean',
         ]);
@@ -54,7 +55,7 @@ class CategorieDepenseController extends Controller
      */
     public function show(CategorieDepense $categorie)
     {
-        $categorie->load(['depenses']);
+        $categorie->load(['depenses' => fn ($query) => $query->visibleTo(request()->user())]);
         $categorie->loadCount('depenses');
 
         return response()->json($categorie);
@@ -65,13 +66,14 @@ class CategorieDepenseController extends Controller
      */
     public function update(Request $request, CategorieDepense $categorie)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $validated = $request->validate([
-            'nom' => 'sometimes|string|max:255|unique:categories_depenses,nom,' . $categorie->id,
-            'code' => 'sometimes|string|max:10|unique:categories_depenses,code,' . $categorie->id,
+            'nom' => 'sometimes|string|max:255|unique:categories_depenses,nom,'.$categorie->id,
+            'code' => 'sometimes|string|max:50|unique:categories_depenses,code,'.$categorie->id,
+            'type' => 'sometimes|in:chantier,administrative',
             'description' => 'sometimes|nullable|string',
             'is_active' => 'sometimes|boolean',
         ]);
@@ -89,12 +91,12 @@ class CategorieDepenseController extends Controller
      */
     public function toggleActive(Request $request, CategorieDepense $categorie)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $categorie->update([
-            'is_active' => !$categorie->is_active
+            'is_active' => ! $categorie->is_active,
         ]);
 
         $message = $categorie->is_active ? 'Catégorie activée' : 'Catégorie désactivée';
@@ -110,14 +112,14 @@ class CategorieDepenseController extends Controller
      */
     public function destroy(Request $request, CategorieDepense $categorie)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         // Vérifier si la catégorie est utilisée
-        if ($categorie->depenses()->count() > 0) {
+        if ($categorie->isUsed()) {
             return response()->json([
-                'message' => 'Impossible de supprimer une catégorie utilisée dans des dépenses'
+                'message' => 'Impossible de supprimer une catégorie utilisée dans des dépenses',
             ], 422);
         }
 

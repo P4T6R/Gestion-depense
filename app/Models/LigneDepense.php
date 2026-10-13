@@ -34,12 +34,12 @@ class LigneDepense extends Model
         parent::boot();
 
         static::saving(function ($ligne) {
-            $ligne->montant = $ligne->quantite * $ligne->prix_unitaire;
+            $ligne->montant = \App\Support\Amount::multiply((string) $ligne->quantite, (string) $ligne->prix_unitaire);
         });
     }
 
     // ========== RELATIONS ==========
-    
+
     public function depense()
     {
         return $this->belongsTo(Depense::class);

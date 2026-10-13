@@ -37,7 +37,7 @@ class Chantier extends Model
     ];
 
     // ========== RELATIONS ==========
-    
+
     public function createur()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -46,8 +46,8 @@ class Chantier extends Model
     public function chefsChantier()
     {
         return $this->belongsToMany(User::class, 'chantier_user')
-                    ->withTimestamps()
-                    ->withPivot('affecte_le');
+            ->withTimestamps()
+            ->withPivot('affecte_le');
     }
 
     public function depenses()
@@ -66,7 +66,7 @@ class Chantier extends Model
     }
 
     // ========== ATTRIBUTS CALCULÉS (Accesseurs) ==========
-    
+
     // Budget restant = alloué - consommé
     public function getBudgetRestantAttribute(): float
     {
@@ -79,6 +79,7 @@ class Chantier extends Model
         if ($this->budget_alloue == 0) {
             return 0;
         }
+
         return round(($this->budget_consomme / $this->budget_alloue) * 100, 2);
     }
 
@@ -99,7 +100,7 @@ class Chantier extends Model
     }
 
     // ========== MÉTHODES ==========
-    
+
     // Recalculer le budget consommé (après validation dépense)
     public function updateBudgetConsomme(): void
     {
@@ -110,13 +111,13 @@ class Chantier extends Model
     // Affecter un chef de chantier
     public function affecterChef(User $chef): void
     {
-        if (!$chef->isChefChantier()) {
+        if (! $chef->isChefChantier()) {
             throw new \Exception('Seul un chef de chantier peut être affecté');
         }
 
-        $this->chefsChantier()->attach($chef->id, [
+        $this->chefsChantier()->syncWithoutDetaching([$chef->id => [
             'affecte_le' => now(),
-        ]);
+        ]]);
     }
 
     // Retirer un chef de chantier

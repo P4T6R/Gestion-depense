@@ -85,7 +85,7 @@ defineProps({
                 <div class="space-y-4">
                     <div v-for="enrollment in recentEnrollments" :key="enrollment.id" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
                         <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                            <div class="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
                                 {{ enrollment.user.name.charAt(0).toUpperCase() }}
                             </div>
                             <div>
@@ -110,7 +110,7 @@ defineProps({
                 <div class="space-y-4">
                     <div v-for="course in popularCourses" :key="course.id" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
                         <div class="flex items-center flex-1">
-                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
+                            <div class="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                 </svg>
@@ -131,7 +131,7 @@ defineProps({
 
         <!-- Actions rapides -->
         <div class="mt-8 grid md:grid-cols-3 gap-6">
-            <Link :href="route('admin.courses.create')" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
+            <Link :href="route('admin.courses.create')" class="bg-linear-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-xl font-bold mb-2">Créer un Cours</h3>
@@ -143,7 +143,7 @@ defineProps({
                 </div>
             </Link>
 
-            <Link :href="route('admin.users')" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
+            <Link :href="route('admin.users')" class="bg-linear-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-xl font-bold mb-2">Gérer les Utilisateurs</h3>
@@ -155,7 +155,7 @@ defineProps({
                 </div>
             </Link>
 
-            <Link :href="route('admin.courses')" class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
+            <Link :href="route('admin.courses')" class="bg-linear-to-br from-green-500 to-green-600 text-white rounded-2xl p-8 hover:shadow-2xl hover:scale-105 transition-all group">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-xl font-bold mb-2">Voir les Cours</h3>
