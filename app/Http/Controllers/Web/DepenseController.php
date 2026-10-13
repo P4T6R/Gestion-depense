@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateDepenseRequest;
 use App\Models\CategorieDepense;
 use App\Models\Chantier;
 use App\Models\Depense;
+use App\Models\Fournisseur;
 use App\Models\UniteMesure;
 use App\Services\DepenseService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -89,8 +90,9 @@ class DepenseController extends Controller
         }
 
         $unites = UniteMesure::actives()->get();
+        $fournisseurs = Fournisseur::where('is_active', true)->orderBy('nom')->get(['id', 'nom']);
 
-        return view('depenses.create', compact('chantiers', 'categories', 'unites'));
+        return view('depenses.create', compact('chantiers', 'categories', 'unites', 'fournisseurs'));
     }
 
     /**
@@ -120,9 +122,17 @@ class DepenseController extends Controller
     public function show(Depense $depense)
     {
         $this->authorize('view', $depense);
-        $depense->load(['chantier', 'utilisateur', 'validateur', 'categorie', 'unite', 'justificatifs', 'lignes.categorieDepense', 'lignes.uniteMesure']);
+        $depense->load(['chantier', 'utilisateur', 'validateur', 'categorie', 'unite', 'justificatifs', 'lignes.categorieDepense', 'lignes.uniteMesure', 'historique']);
+        $rapprochements = collect();
+        if ($depense->fournisseur_id && $depense->date_facture) {
+            $rapprochements = Depense::visibleTo(auth()->user())
+                ->where('fournisseur_id', $depense->fournisseur_id)
+                ->where('prix_total', $depense->prix_total)
+                ->whereDate('date_facture', $depense->date_facture->toDateString())
+                ->whereKeyNot($depense->id)->latest()->limit(5)->get(['id', 'numero_facture', 'prix_total', 'date_facture']);
+        }
 
-        return view('depenses.show', compact('depense'));
+        return view('depenses.show', compact('depense', 'rapprochements'));
     }
 
     /**
@@ -175,10 +185,11 @@ class DepenseController extends Controller
         $chantiers = $user->isDirecteur() ? Chantier::all() : $user->chantiers()->get();
         $categories = CategorieDepense::actives()->get();
         $unites = UniteMesure::actives()->get();
+        $fournisseurs = Fournisseur::where('is_active', true)->orderBy('nom')->get(['id', 'nom']);
         $depense->load('lignes');
         $view = $depense->lignes->isNotEmpty() ? 'depenses.create' : 'depenses.edit';
 
-        return view($view, compact('depense', 'chantiers', 'categories', 'unites'));
+        return view($view, compact('depense', 'chantiers', 'categories', 'unites', 'fournisseurs'));
     }
 
     /**
@@ -193,7 +204,7 @@ class DepenseController extends Controller
         $this->service->update($depense, $data, $request->user(), $files);
 
         return redirect()->route('depenses.show', $depense)->with('success', $wasRejected
-            ? 'Facture corrigée et soumise à nouveau au directeur.'
+            ? 'Facture corrigée et soumise à nouveau '.($depense->circuit_validation_directe ? 'à la comptable.' : 'au directeur.')
             : 'Dépense modifiée avec succès.');
     }
 

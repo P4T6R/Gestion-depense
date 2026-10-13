@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\CategorieDepenseController;
 use App\Http\Controllers\Web\ChantierController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DepenseController;
+use App\Http\Controllers\Web\FournisseurController;
 use App\Http\Controllers\Web\UniteMesureController;
 use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,9 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     // ========== UTILISATEURS (Admin seulement) ==========
     Route::middleware('checkRole:administrateur')->group(function () {
+        Route::get('/fournisseurs', [FournisseurController::class, 'index'])->name('fournisseurs.index');
+        Route::post('/fournisseurs', [FournisseurController::class, 'store'])->name('fournisseurs.store');
+        Route::put('/fournisseurs/{fournisseur}', [FournisseurController::class, 'update'])->name('fournisseurs.update');
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');

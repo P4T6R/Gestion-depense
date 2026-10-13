@@ -18,6 +18,7 @@ class Justificatif extends Model
         'chemin_fichier',
         'type_fichier',
         'taille_fichier',
+        'sha256',
     ];
 
     // Relations

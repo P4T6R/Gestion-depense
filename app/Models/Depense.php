@@ -13,9 +13,12 @@ class Depense extends Model
     protected $fillable = [
         'chantier_id',
         'user_id',
+        'circuit_validation_directe',
         // Infos facture
         'numero_facture',
+        'numero_facture_normalise',
         'fournisseur',
+        'fournisseur_id',
         'date_facture',
         // Anciens champs (compatibilité)
         'id_produit',
@@ -32,6 +35,7 @@ class Depense extends Model
         'valide_par',
         'valide_le',
         'motif_rejet',
+        'version_courante',
     ];
 
     protected $casts = [
@@ -40,6 +44,8 @@ class Depense extends Model
         'prix_total' => 'decimal:2',
         'valide_le' => 'datetime',
         'date_facture' => 'date',
+        'version_courante' => 'integer',
+        'circuit_validation_directe' => 'boolean',
     ];
 
     // ========== RELATIONS ==========
@@ -52,6 +58,11 @@ class Depense extends Model
     public function utilisateur()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function fournisseurReference()
+    {
+        return $this->belongsTo(Fournisseur::class, 'fournisseur_id');
     }
 
     public function validateur()
@@ -77,6 +88,11 @@ class Depense extends Model
     public function lignes()
     {
         return $this->hasMany(LigneDepense::class);
+    }
+
+    public function historique()
+    {
+        return $this->hasMany(DepenseHistorique::class)->orderBy('id');
     }
 
     // ========== MUTATEURS (Setters) ==========

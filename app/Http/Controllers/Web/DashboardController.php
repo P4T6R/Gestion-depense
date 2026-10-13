@@ -59,7 +59,7 @@ class DashboardController extends Controller
 
             case 'directeur':
                 // Directeur voit TOUTES les dépenses en attente (pas seulement ses chantiers)
-                $depensesRecentes = Depense::where('statut_validation', 'en_attente')
+                $depensesRecentes = Depense::where('statut_validation', 'en_attente')->where('circuit_validation_directe', false)
                     ->with(['chantier:id,nom', 'utilisateur:id,name'])
                     ->latest()
                     ->take(5)
@@ -73,7 +73,8 @@ class DashboardController extends Controller
                 break;
 
             case 'comptable':
-                $depensesRecentes = Depense::where('statut_validation', 'acceptee')
+                $depensesRecentes = Depense::where(fn ($query) => $query->where('statut_validation', 'acceptee')
+                    ->orWhere(fn ($direct) => $direct->where('statut_validation', 'en_attente')->where('circuit_validation_directe', true)))
                     ->with(['chantier:id,nom', 'utilisateur:id,name'])
                     ->latest()
                     ->take(5)
@@ -163,8 +164,8 @@ class DashboardController extends Controller
     {
         // Optimisation: une seule requête pour toutes les stats
         $stats = Depense::selectRaw("
-            SUM(CASE WHEN statut_validation = 'en_attente' THEN 1 ELSE 0 END) as a_approuver,
-            SUM(CASE WHEN statut_validation = 'en_attente' THEN prix_total ELSE 0 END) as montant_a_approuver,
+            SUM(CASE WHEN statut_validation = 'en_attente' AND circuit_validation_directe = 0 THEN 1 ELSE 0 END) as a_approuver,
+            SUM(CASE WHEN statut_validation = 'en_attente' AND circuit_validation_directe = 0 THEN prix_total ELSE 0 END) as montant_a_approuver,
             SUM(CASE WHEN statut_validation = 'acceptee' THEN 1 ELSE 0 END) as approuvees,
             SUM(CASE WHEN statut_validation = 'acceptee' THEN prix_total ELSE 0 END) as montant_approuvees,
             SUM(CASE WHEN statut_validation = 'validee' THEN 1 ELSE 0 END) as validees,
@@ -191,8 +192,8 @@ class DashboardController extends Controller
     {
         // Optimisation: une seule requête pour toutes les stats
         $stats = Depense::selectRaw("
-            SUM(CASE WHEN statut_validation = 'acceptee' THEN 1 ELSE 0 END) as a_valider,
-            SUM(CASE WHEN statut_validation = 'acceptee' THEN prix_total ELSE 0 END) as montant_a_valider,
+            SUM(CASE WHEN statut_validation = 'acceptee' OR (statut_validation = 'en_attente' AND circuit_validation_directe = 1) THEN 1 ELSE 0 END) as a_valider,
+            SUM(CASE WHEN statut_validation = 'acceptee' OR (statut_validation = 'en_attente' AND circuit_validation_directe = 1) THEN prix_total ELSE 0 END) as montant_a_valider,
             SUM(CASE WHEN statut_validation = 'validee' THEN 1 ELSE 0 END) as validees,
             SUM(CASE WHEN statut_validation = 'validee' THEN prix_total ELSE 0 END) as montant_validees,
             SUM(CASE WHEN statut_validation = 'rejetee' THEN 1 ELSE 0 END) as rejetees,

@@ -26,7 +26,7 @@
     <section role="status" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-950" aria-label="Motif du rejet">
         <h2 class="font-semibold">Facture rejetée : correction demandée</h2>
         <p class="mt-2 whitespace-pre-line text-sm">{{ $depense->motif_rejet }}</p>
-        <p class="mt-3 text-sm">Enregistrez vos corrections pour soumettre à nouveau la facture au directeur.</p>
+        <p class="mt-3 text-sm">Enregistrez vos corrections pour soumettre à nouveau la facture {{ $depense->circuit_validation_directe ? 'à la comptable' : 'au directeur' }}.</p>
     </section>
     @endif
 

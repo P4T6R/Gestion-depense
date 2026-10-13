@@ -29,6 +29,10 @@ class StoreDepenseRequest extends FormRequest
     {
         return [
             'chantier_id' => ['required', 'integer', Rule::exists('chantiers', 'id')->whereNull('deleted_at')],
+            'numero_facture' => 'nullable|string|max:255',
+            'fournisseur' => 'nullable|string|max:255',
+            'fournisseur_id' => ['nullable', 'integer', Rule::exists('fournisseurs', 'id')->where('is_active', true)],
+            'date_facture' => 'nullable|date',
             'nom_produit' => 'required|string|max:255',
             'quantite' => 'required|numeric|decimal:0,2|min:0.01|max:99999999.99',
             'prix_unitaire' => 'required|numeric|decimal:0,2|min:0|max:9999999999999.99',

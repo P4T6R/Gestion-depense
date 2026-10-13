@@ -20,6 +20,7 @@ class UpdateDepenseRequest extends FormRequest
             'chantier_id' => ['sometimes', 'required', 'integer', Rule::exists('chantiers', 'id')->whereNull('deleted_at')],
             'numero_facture' => 'sometimes|nullable|string|max:255',
             'fournisseur' => 'sometimes|nullable|string|max:255',
+            'fournisseur_id' => ['sometimes', 'nullable', 'integer', Rule::exists('fournisseurs', 'id')->where('is_active', true)],
             'date_facture' => 'sometimes|nullable|date',
             'observations' => 'sometimes|nullable|string|max:10000',
             'statut_paiement' => 'sometimes|in:paye,non_paye',

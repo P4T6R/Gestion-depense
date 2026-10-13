@@ -1,6 +1,6 @@
 # Gestion des dépenses
 
-Application Laravel pour suivre les chantiers, factures multi-articles, justificatifs et budgets. Le chef de chantier saisit ses dépenses ; le directeur approuve ou rejette les factures en attente ; le comptable valide les factures approuvées. Après un rejet par le directeur ou la comptable, le créateur peut corriger la facture et l’enregistrer pour la soumettre de nouveau au directeur. Une correction effective ou un nouveau justificatif est exigé ; l’ancienne décision est effacée lors de la nouvelle soumission. L’approbation seule ne consomme pas le budget et ne permet pas de marquer la facture payée. Le budget consommé est mis à jour après validation comptable ; le parcours de paiement reste à définir. Le web et l’API partagent les mêmes validations, autorisations et services métier.
+Application Laravel pour suivre les chantiers, factures multi-articles, justificatifs et budgets. Le chef de chantier saisit ses dépenses ; le directeur approuve ou rejette les factures en attente ; le comptable valide les factures approuvées. Une facture créée par un directeur passe directement à la comptable : le directeur ne peut ni l’approuver ni la rejeter lui-même. Après un rejet, le créateur peut corriger la facture et la soumettre à nouveau ; l’historique conserve chaque version, décision, auteur, date et motif. L’approbation seule ne consomme pas le budget et ne permet pas de marquer la facture payée. Le budget consommé est mis à jour après validation comptable ; le parcours de paiement reste à définir. Le web et l’API partagent les mêmes validations, autorisations et services métier.
 
 Voir [la revue d’architecture et les corrections](docs/ARCHITECTURE-REVIEW.md).
 
@@ -47,6 +47,14 @@ php artisan justificatifs:protect
 ```
 
 La commande copie et compare les empreintes avant de modifier la référence et de supprimer l’ancienne copie publique. Elle refuse les conflits et signale les fichiers manquants. Sauvegarder les fichiers et la base avant cette migration.
+
+Après la migration du schéma, calculer les empreintes des justificatifs déjà enregistrés :
+
+```bash
+php artisan justificatifs:empreintes
+```
+
+La commande peut être relancée ; elle signale les fichiers manquants. Les nouveaux justificatifs reçoivent une empreinte SHA-256 à l’enregistrement. Le registre fournisseurs est accessible à l’administrateur. La saisie reconnaît automatiquement un fournisseur existant malgré les variantes d’accents, d’espaces et de casse. Un même fournisseur avec le même numéro de facture normalisé, ou un justificatif déjà joint à une autre facture, bloque la soumission. Sur la fiche, un rapprochement de fournisseur, montant et date affiche une alerte à vérifier sans bloquer, car ces trois valeurs peuvent aussi correspondre à deux achats distincts. Les factures anciennes reçoivent un instantané de leur état actuel lors de la migration ; les décisions antérieures à cette migration ne peuvent pas être reconstruites.
 
 Les montants agrégés de l’API sont des chaînes décimales exactes. L’étape d’approbation est `POST /api/depenses/{depense}/approve` avant la validation comptable. Les liens des justificatifs doivent passer par les routes protégées, jamais par `/storage/...` pour les nouveaux fichiers.
 

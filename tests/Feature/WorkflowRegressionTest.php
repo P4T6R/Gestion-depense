@@ -238,6 +238,20 @@ class WorkflowRegressionTest extends TestCase
         $this->actingAs($accountant)->post(route('depenses.validate', $expense), ['action' => 'accept'])->assertRedirect();
         $this->assertSame('validee', $expense->fresh()->statut_validation);
         $this->assertSame('300.75', $chantier->fresh()->budget_consomme);
+
+        $events = $expense->historique()->get();
+        $this->assertSame(['creation', 'rejet', 'resoumission', 'approbation', 'validation'], $events->pluck('action')->all());
+        $this->assertSame([1, 1, 2, 2, 2], $events->pluck('version')->all());
+        $this->assertSame('250.63', $events[1]->instantane['prix_total']);
+        $this->assertSame('300.75', $events[2]->instantane['prix_total']);
+        $this->assertSame('Corriger la quantité de ciment.', $events[1]->motif);
+        $this->assertSame($director->id, $events[1]->acteur_id);
+        $this->assertSame($accountant->id, $events[4]->acteur_id);
+        $this->assertNotNull($events[1]->created_at);
+        $this->actingAs($chef)->get(route('depenses.show', $expense))
+            ->assertOk()->assertSee('Historique de la facture')
+            ->assertSee('Corriger la quantité de ciment.')
+            ->assertSee('Correction et nouvelle soumission');
     }
 
     public function test_accountant_rejection_also_returns_to_director_after_creator_correction(): void
@@ -264,6 +278,8 @@ class WorkflowRegressionTest extends TestCase
         $this->actingAs($accountant)->postJson('/api/depenses/'.$expense->id.'/valider')->assertForbidden();
         $this->actingAs($director)->postJson('/api/depenses/'.$expense->id.'/approve')
             ->assertOk()->assertJsonPath('depense.statut_validation', 'acceptee');
+        $this->assertSame(['etat_initial', 'approbation', 'rejet', 'resoumission', 'approbation'], $expense->historique()->pluck('action')->all());
+        $this->assertSame('Le prix indiqué est incorrect.', $expense->historique()->where('action', 'rejet')->first()->motif);
     }
 
     public function test_invoice_cannot_be_marked_paid_before_director_and_accountant_decisions(): void

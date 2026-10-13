@@ -11,6 +11,13 @@
             <span>{{ session('success') }}</span>
         </div>
     @endif
+    @if($rapprochements->isNotEmpty())
+        <section role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Factures à vérifier">
+            <p class="flex items-center gap-2 font-semibold"><x-icon name="triangle-alert" class="size-5" /> Factures à vérifier</p>
+            <p class="mt-1">Même fournisseur, montant et date de facture. Vérifiez avant de prendre une décision.</p>
+            <ul class="mt-2 flex flex-wrap gap-2">@foreach($rapprochements as $proche)<li><a class="font-semibold underline underline-offset-2" href="{{ route('depenses.show', $proche) }}">Facture #{{ $proche->id }}{{ $proche->numero_facture ? ' — '.$proche->numero_facture : '' }}</a></li>@endforeach</ul>
+        </section>
+    @endif
     <!-- Breadcrumb -->
     <nav class="flex text-sm text-gray-500">
         <a href="{{ route('dashboard') }}" class="hover:text-[#E31E24]">Dashboard</a>
@@ -46,7 +53,7 @@
             </form>
             @endcan
 
-            @if(auth()->user()->role === 'directeur' && $depense->statut_validation === 'en_attente')
+            @can('approve', $depense)
             <form action="{{ route('depenses.approve', $depense->id) }}" method="POST">
                 @csrf
                 <button type="submit" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#D7232A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#B91C23]">
@@ -54,6 +61,8 @@
                     <span>Approuver</span>
                 </button>
             </form>
+            @endcan
+            @if(auth()->user()->role === 'directeur' && auth()->user()->can('reject', $depense))
             <button type="button" @click="directorRejectOpen = !directorRejectOpen" :aria-expanded="directorRejectOpen" aria-controls="director-reject-form" class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50">
                 <x-icon name="x" class="size-4" />
                 <span>Rejeter</span>
@@ -62,7 +71,7 @@
         </div>
     </div>
 
-    @if(auth()->user()->role === 'directeur' && $depense->statut_validation === 'en_attente')
+    @if(auth()->user()->role === 'directeur' && auth()->user()->can('reject', $depense))
     <section id="director-reject-form" x-show="directorRejectOpen" x-cloak class="rounded-2xl border border-red-200 bg-white p-5 sm:p-6" aria-label="Rejeter la facture">
         <h2 class="text-lg font-semibold text-gray-900">Motif du rejet</h2>
         <p class="mt-1 text-sm text-gray-600">Le motif sera visible sur la fiche. La facture ne pourra pas être validée par la comptable.</p>
@@ -386,6 +395,8 @@
 
                 @if($depense->statut_validation === 'acceptee')
                     <p class="rounded-xl bg-[#F7F6F3] p-4 text-sm text-gray-700">Approuvée par le directeur. La validation comptable reste nécessaire avant toute consommation du budget ou paiement.</p>
+                @elseif($depense->statut_validation === 'en_attente' && $depense->circuit_validation_directe)
+                    <p class="rounded-xl bg-[#F7F6F3] p-4 text-sm text-gray-700">Facture créée par un directeur : la comptable prend directement la décision. Aucun paiement n'est possible avant sa validation.</p>
                 @endif
 
                 @if($depense->statut_validation === 'validee')
@@ -406,14 +417,14 @@
                     <p class="text-gray-600 text-sm">Motif du Rejet</p>
                     <p class="text-red-600 font-semibold mt-2">{{ $depense->motif_rejet }}</p>
                     @can('update', $depense)
-                    <p class="mt-3 text-sm text-gray-600">Corrigez la facture et enregistrez-la pour la soumettre de nouveau au directeur.</p>
+                    <p class="mt-3 text-sm text-gray-600">Corrigez la facture et enregistrez-la pour la soumettre de nouveau {{ $depense->circuit_validation_directe ? 'à la comptable' : 'au directeur' }}.</p>
                     @endcan
                 </div>
                 @endif
             </div>
 
             @if(auth()->user()->role === 'comptable')
-                @if($depense->statut_validation === 'acceptee')
+                @can('validate', $depense)
                 <!-- Validation Comptable -->
                 <div class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8">
                     <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
@@ -497,6 +508,70 @@
             </div>
         </div>
     </div>
+
+    <section class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8" aria-labelledby="historique-title">
+        <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <h2 id="historique-title" class="flex items-center gap-2 text-xl font-bold text-gray-900">
+                    <x-icon name="clock-3" class="size-5 text-[#D7232A]" />Historique de la facture
+                </h2>
+                <p class="mt-1 text-sm text-gray-600">Chaque décision conserve la version de la facture examinée.</p>
+            </div>
+            <span class="rounded-full bg-[#F8EEEE] px-3 py-1 text-xs font-semibold text-[#C31F28]">Version {{ $depense->version_courante }}</span>
+        </div>
+        <ol class="space-y-3">
+            @forelse($depense->historique->reverse() as $event)
+                @php
+                    $actionLabels = [
+                        'etat_initial' => 'État initial connu',
+                        'creation' => 'Création',
+                        'modification' => 'Modification',
+                        'resoumission' => 'Correction et nouvelle soumission',
+                        'approbation' => 'Approbation du directeur',
+                        'rejet' => 'Rejet',
+                        'validation' => 'Validation comptable',
+                        'suppression' => 'Suppression',
+                    ];
+                    $snapshot = $event->instantane ?? [];
+                @endphp
+                <li class="rounded-xl border border-[#E7E5E1] bg-[#FCFBFA] p-4">
+                    <div class="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ $actionLabels[$event->action] ?? $event->action }} · v{{ $event->version }}</p>
+                            <p class="mt-1 text-sm text-gray-600">{{ $event->acteur_nom ?? 'État antérieur au suivi' }}@if($event->acteur_role) · {{ str_replace('_', ' ', $event->acteur_role) }}@endif</p>
+                        </div>
+                        <time datetime="{{ $event->created_at?->toIso8601String() }}" class="text-xs text-gray-500">{{ $event->created_at?->format('d/m/Y H:i:s') }}</time>
+                    </div>
+                    @if($event->motif)
+                        <p class="mt-3 whitespace-pre-line rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-800"><strong>Motif :</strong> {{ $event->motif }}</p>
+                    @endif
+                    <details class="mt-3 border-t border-[#E7E5E1] pt-3 text-sm">
+                        <summary class="cursor-pointer font-semibold text-[#C31F28]">Voir la version examinée</summary>
+                        <div class="mt-3 grid gap-3 text-gray-700 sm:grid-cols-2">
+                            <p><span class="text-gray-500">N° facture :</span> {{ $snapshot['numero_facture'] ?? 'Non renseigné' }}</p>
+                            <p><span class="text-gray-500">Fournisseur :</span> {{ $snapshot['fournisseur'] ?? 'Non renseigné' }}</p>
+                            <p><span class="text-gray-500">Montant :</span> {{ number_format((float) ($snapshot['prix_total'] ?? 0), 2, ',', ' ') }} F</p>
+                            <p><span class="text-gray-500">Statut :</span> {{ str_replace('_', ' ', $event->statut_apres) }}</p>
+                        </div>
+                        @if(!empty($snapshot['lignes']))
+                            <ul class="mt-3 space-y-1 border-t border-[#E7E5E1] pt-3">
+                                @foreach($snapshot['lignes'] as $line)
+                                    <li>{{ $line['designation'] ?? 'Article' }} · {{ $line['quantite'] ?? 0 }} × {{ number_format((float) ($line['prix_unitaire'] ?? 0), 2, ',', ' ') }} F</li>
+                                @endforeach
+                            </ul>
+                        @elseif(!empty($snapshot['nom_produit']))
+                            <p class="mt-3">{{ $snapshot['nom_produit'] }} · {{ $snapshot['quantite'] ?? 0 }} × {{ number_format((float) ($snapshot['prix_unitaire'] ?? 0), 2, ',', ' ') }} F</p>
+                        @endif
+                        @if(!empty($snapshot['justificatifs']))
+                            <p class="mt-3 border-t border-[#E7E5E1] pt-3 text-gray-500">Justificatifs : {{ collect($snapshot['justificatifs'])->pluck('nom_fichier')->join(', ') }}</p>
+                        @endif
+                    </details>
+                </li>
+            @empty
+                <li class="rounded-xl border border-dashed border-[#E7E5E1] p-4 text-sm text-gray-600">Aucun événement enregistré depuis l’activation de l’historique. Les décisions antérieures ne peuvent pas être reconstituées.</li>
+            @endforelse
+        </ol>
+    </section>
 </div>
 
 <script>

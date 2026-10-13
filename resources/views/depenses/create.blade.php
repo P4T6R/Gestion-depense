@@ -36,7 +36,7 @@
     <section role="status" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-950" aria-label="Motif du rejet">
         <h2 class="font-semibold">Facture rejetée : correction demandée</h2>
         <p class="mt-2 whitespace-pre-line text-sm">{{ $depense->motif_rejet }}</p>
-        <p class="mt-3 text-sm">Enregistrez vos corrections pour soumettre à nouveau la facture au directeur.</p>
+        <p class="mt-3 text-sm">Enregistrez vos corrections pour soumettre à nouveau la facture {{ $depense->circuit_validation_directe ? 'à la comptable' : 'au directeur' }}.</p>
     </section>
     @endif
 
@@ -85,7 +85,9 @@
                     <label class="block text-gray-700 font-semibold mb-2">
                         <x-icon name="truck" class="text-[#D7232A] mr-2" />Fournisseur
                     </label>
-                    <input type="text" name="fournisseur" aria-label="Fournisseur" value="{{ old('fournisseur', $depense->fournisseur ?? '') }}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]" placeholder="Quincaillerie ABC">
+                    <input type="text" name="fournisseur" list="fournisseurs-connus" aria-label="Fournisseur" value="{{ old('fournisseur', $depense->fournisseur ?? '') }}" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]" placeholder="Quincaillerie ABC">
+                    <datalist id="fournisseurs-connus">@foreach($fournisseurs as $fournisseur)<option value="{{ $fournisseur->nom }}"></option>@endforeach</datalist>
+                    <p class="mt-1 text-xs text-gray-500">Choisissez un fournisseur existant ou saisissez un nouveau nom.</p>
                 </div>
 
                 <!-- Date Facture -->
@@ -203,6 +205,7 @@
                 </label>
                 <input type="file" name="justificatif" aria-label="Justificatif PDF ou image" accept="image/jpeg,image/png,application/pdf" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A]">
                 <p class="text-sm text-gray-500 mt-2">Image JPG, PNG ou document PDF pour la facture entière.</p>
+                <p class="mt-1 text-xs text-gray-500">Un numéro déjà utilisé chez ce fournisseur ou un justificatif identique bloque la soumission.</p>
             </div>
 
             <!-- Observations Générales -->

@@ -89,7 +89,9 @@ class DepensePolicy
         }
 
         // La dépense doit être en attente
-        return $depense->statut_validation === 'en_attente';
+        return $depense->statut_validation === 'en_attente'
+            && ! $depense->circuit_validation_directe
+            && $depense->user_id !== $user->id;
     }
 
     /**
@@ -102,8 +104,9 @@ class DepensePolicy
             return false;
         }
 
-        // La dépense doit avoir été acceptée par le directeur
-        return $depense->statut_validation === 'acceptee';
+        // La facture du directeur va directement à la comptable ; les autres exigent l'approbation.
+        return $depense->statut_validation === 'acceptee'
+            || ($depense->statut_validation === 'en_attente' && $depense->circuit_validation_directe);
     }
 
     /**
@@ -112,13 +115,14 @@ class DepensePolicy
     public function reject(User $user, Depense $depense): bool
     {
         // Le directeur peut rejeter les dépenses en attente
-        if ($user->role === 'directeur' && $depense->statut_validation === 'en_attente') {
+        if ($user->role === 'directeur' && $depense->statut_validation === 'en_attente' && ! $depense->circuit_validation_directe && $depense->user_id !== $user->id) {
             return true;
         }
 
         // Le comptable peut rejeter les dépenses acceptées
-        if ($user->role === 'comptable' && $depense->statut_validation === 'acceptee') {
-            return true;
+        if ($user->role === 'comptable') {
+            return $depense->statut_validation === 'acceptee'
+                || ($depense->statut_validation === 'en_attente' && $depense->circuit_validation_directe);
         }
 
         return false;

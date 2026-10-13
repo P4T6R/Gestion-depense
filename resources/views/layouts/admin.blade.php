@@ -17,6 +17,7 @@
         ['label' => 'Utilisateurs', 'icon' => 'users-round', 'route' => 'users.index', 'match' => 'users.*', 'roles' => ['administrateur']],
     ];
     $adminNavigation = [
+        ['label' => 'Fournisseurs', 'icon' => 'truck', 'route' => 'fournisseurs.index', 'match' => 'fournisseurs.*'],
         ['label' => 'Catégories', 'icon' => 'tag', 'route' => 'categories.index', 'match' => 'categories.*'],
         ['label' => 'Unités', 'icon' => 'scale', 'route' => 'unites.index', 'match' => 'unites.*'],
     ];

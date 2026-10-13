@@ -64,7 +64,7 @@ class DepenseController extends Controller
 
         return response()->json($depense->load([
             'chantier', 'utilisateur', 'validateur', 'justificatifs', 'categorie', 'unite',
-            'lignes.categorieDepense', 'lignes.uniteMesure',
+            'lignes.categorieDepense', 'lignes.uniteMesure', 'historique',
         ]));
     }
 
@@ -79,7 +79,7 @@ class DepenseController extends Controller
         }
 
         return response()->json([
-            'message' => $wasRejected ? 'Facture corrigée et soumise à nouveau au directeur' : 'Dépense mise à jour avec succès',
+            'message' => $wasRejected ? 'Facture corrigée et soumise à nouveau '.($depense->circuit_validation_directe ? 'à la comptable' : 'au directeur') : 'Dépense mise à jour avec succès',
             'depense' => $this->service->update($depense, $data, $request->user(), $files),
         ]);
     }
