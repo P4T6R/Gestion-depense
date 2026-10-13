@@ -5,6 +5,7 @@ use App\Http\Controllers\API\CategorieDepenseController;
 use App\Http\Controllers\API\ChantierController;
 use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\DepenseController;
+use App\Http\Controllers\API\PaiementController;
 use App\Http\Controllers\API\UniteMesureController;
 use App\Http\Controllers\API\UserController;
 use Illuminate\Support\Facades\Route;
@@ -79,6 +80,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         // Validation comptable
         Route::post('/{depense}/valider', [DepenseController::class, 'valider']);
         Route::post('/{depense}/rejeter', [DepenseController::class, 'rejeter']);
+        Route::post('/{depense}/paiements', [PaiementController::class, 'store']);
+        Route::post('/{depense}/paiements/{paiement}/annuler', [PaiementController::class, 'cancel']);
     });
 
     // ---------- CATÉGORIES DE DÉPENSES ----------

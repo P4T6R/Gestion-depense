@@ -30,6 +30,10 @@
         @endif
     @endif
 
+    @if($portfolio ?? null)
+        @include('dashboard.finances')
+    @endif
+
     @if(auth()->user()->role === 'administrateur')
         @include('dashboard.admin')
 

@@ -12,6 +12,7 @@ use App\Models\Depense;
 use App\Models\Fournisseur;
 use App\Models\UniteMesure;
 use App\Services\DepenseService;
+use App\Services\PaiementService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -119,10 +120,13 @@ class DepenseController extends Controller
     /**
      * Afficher les détails d'une dépense
      */
-    public function show(Depense $depense)
+    public function show(Depense $depense, PaiementService $paiements)
     {
         $this->authorize('view', $depense);
-        $depense->load(['chantier', 'utilisateur', 'validateur', 'categorie', 'unite', 'justificatifs', 'lignes.categorieDepense', 'lignes.uniteMesure', 'historique']);
+        $depense->load(['chantier', 'utilisateur', 'validateur', 'categorie', 'unite', 'justificatifs', 'lignes.categorieDepense', 'lignes.uniteMesure', 'historique', 'paiements']);
+        $montantPaye = $paiements->paidAmount($depense);
+        $resteAPayer = bcsub((string) $depense->prix_total, $montantPaye, 2);
+        $historiqueNonRapproche = $depense->statut_validation === 'validee' && $depense->statut_paiement === 'paye' && $depense->paiements->isEmpty();
         $rapprochements = collect();
         if ($depense->fournisseur_id && $depense->date_facture) {
             $rapprochements = Depense::visibleTo(auth()->user())
@@ -132,7 +136,7 @@ class DepenseController extends Controller
                 ->whereKeyNot($depense->id)->latest()->limit(5)->get(['id', 'numero_facture', 'prix_total', 'date_facture']);
         }
 
-        return view('depenses.show', compact('depense', 'rapprochements'));
+        return view('depenses.show', compact('depense', 'rapprochements', 'montantPaye', 'resteAPayer', 'historiqueNonRapproche'));
     }
 
     /**

@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Chantier;
 use App\Models\Depense;
 use App\Models\User;
+use App\Services\ChantierFinancialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, ChantierFinancialService $finances)
     {
         $user = $request->user();
 
@@ -88,7 +89,14 @@ class DashboardController extends Controller
                 break;
         }
 
-        return view('dashboard', compact('stats', 'depensesRecentes', 'chantiersActifs', 'userRole'));
+        $portfolio = null;
+        $synthesesChantiers = [];
+        if (in_array($userRole, ['administrateur', 'directeur', 'comptable'])) {
+            $portfolio = $finances->totals(Chantier::all(['id', 'budget_alloue']));
+            $synthesesChantiers = $finances->forChantiers($chantiersActifs);
+        }
+
+        return view('dashboard', compact('stats', 'depensesRecentes', 'chantiersActifs', 'userRole', 'portfolio', 'synthesesChantiers'));
     }
 
     // Dashboard Administrateur - Statistiques globales

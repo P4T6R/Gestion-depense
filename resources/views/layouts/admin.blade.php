@@ -11,7 +11,7 @@
     $role = auth()->user()->role;
     $navigation = [
         ['label' => 'Tableau de bord', 'icon' => 'layout-dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'roles' => ['administrateur', 'chef_chantier', 'directeur', 'comptable']],
-        ['label' => 'Chantiers', 'icon' => 'building-2', 'route' => 'chantiers.index', 'match' => 'chantiers.*', 'roles' => ['administrateur', 'chef_chantier', 'directeur']],
+        ['label' => 'Chantiers', 'icon' => 'building-2', 'route' => 'chantiers.index', 'match' => 'chantiers.*', 'roles' => ['administrateur', 'chef_chantier', 'directeur', 'comptable']],
         ['label' => 'Dépenses', 'icon' => 'receipt', 'route' => 'depenses.index', 'match' => 'depenses.index', 'roles' => ['administrateur', 'chef_chantier', 'directeur', 'comptable']],
         ['label' => 'Rapports', 'icon' => 'chart-no-axes-column', 'route' => 'depenses.rapports', 'match' => 'depenses.rapports', 'roles' => ['administrateur', 'comptable']],
         ['label' => 'Utilisateurs', 'icon' => 'users-round', 'route' => 'users.index', 'match' => 'users.*', 'roles' => ['administrateur']],

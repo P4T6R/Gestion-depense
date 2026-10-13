@@ -81,37 +81,33 @@
 
             <!-- Card - Budget -->
             <div class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8">
-                <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
                     <x-icon name="wallet" class="text-[#D7232A] mr-3" />
-                    Budget & Dépenses
+                    Situation financière
                 </h2>
-                <div class="space-y-4">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <p class="text-gray-600 text-sm">Budget Alloué</p>
-                            <p class="text-gray-900 font-semibold">{{ number_format($chantier->budget_alloue, 0, ',', ' ') }} F</p>
+                <p class="mb-6 text-sm text-gray-600">Le solde déduit les factures validées, même si elles ne sont pas encore payées.</p>
+                @php
+                    $financeCards = [
+                        ['label' => 'Budget alloué', 'value' => $synthese['budget_alloue'], 'icon' => 'wallet', 'note' => 'Montant autorisé pour ce chantier'],
+                        ['label' => 'Factures en attente', 'value' => $synthese['factures_en_attente'], 'icon' => 'clock-3', 'note' => 'En cours de décision ou de validation'],
+                        ['label' => 'Dépenses validées', 'value' => $synthese['depenses_validees'], 'icon' => 'check-check', 'note' => 'Engagées dans le budget'],
+                        ['label' => 'Réellement payé', 'value' => $synthese['montant_paye'], 'icon' => 'banknote', 'note' => 'Paiements enregistrés et non annulés'],
+                        ['label' => 'Reste à payer', 'value' => $synthese['reste_a_payer'], 'icon' => 'receipt', 'note' => 'Validé mais non réglé'],
+                        ['label' => 'Solde disponible', 'value' => $synthese['solde_disponible'], 'icon' => 'coins', 'note' => 'Budget alloué moins dépenses validées'],
+                    ];
+                @endphp
+                <dl class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    @foreach($financeCards as $card)
+                        <div class="rounded-xl border border-[#E7E5E1] bg-[#FCFBF9] p-4">
+                            <dt class="flex items-center gap-2 text-sm font-medium text-gray-600"><x-icon :name="$card['icon']" class="size-4 text-[#C31F28]" />{{ $card['label'] }}</dt>
+                            <dd class="mt-3 text-xl font-semibold tracking-tight text-gray-900">{{ number_format((float) $card['value'], 2, ',', ' ') }} <span class="text-sm font-medium">F</span></dd>
+                            <p class="mt-1 text-xs text-gray-500">{{ $card['note'] }}</p>
                         </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <p class="text-gray-600 text-sm">Budget Consommé</p>
-                            <p class="text-gray-900 font-semibold">{{ number_format($chantier->budget_consomme, 0, ',', ' ') }} F</p>
-                        </div>
-                    </div>
-                    <div class="pt-4 border-t border-gray-200">
-                        <div class="flex items-center justify-between mb-2">
-                            <p class="text-gray-600 text-sm">Budget Restant</p>
-                            <p class="text-gray-900 font-semibold">{{ number_format($chantier->budget_alloue - $chantier->budget_consomme, 0, ',', ' ') }} F</p>
-                        </div>
-                        @php
-                            $percentageUsed = $chantier->budget_alloue > 0 ? ($chantier->budget_consomme / $chantier->budget_alloue) * 100 : 0;
-                        @endphp
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full bg-[#D7232A]" style="width: {{ min($percentageUsed, 100) }}%"></div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">{{ number_format($percentageUsed, 1) }}% consommé</p>
-                    </div>
-                </div>
+                    @endforeach
+                </dl>
+                @if($synthese['factures_historiques_a_rapprocher'] > 0)
+                    <p role="status" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">{{ $synthese['factures_historiques_a_rapprocher'] }} ancienne(s) facture(s) marquée(s) payée(s) restent à rapprocher ({{ number_format((float) $synthese['historique_a_rapprocher'], 2, ',', ' ') }} F). Ce montant n’est pas inclus dans « Réellement payé ».</p>
+                @endif
             </div>
         </div>
 
@@ -187,5 +183,14 @@
         </div>
     </div>
     @endif
+
+    <section class="overflow-hidden rounded-2xl border border-[#E7E5E1] bg-white" aria-labelledby="derniers-paiements-title">
+        <div class="border-b border-[#E7E5E1] px-5 py-5 sm:px-8"><h2 id="derniers-paiements-title" class="flex items-center gap-2 text-xl font-semibold"><x-icon name="banknote" class="size-5 text-[#D7232A]" />Derniers paiements</h2><p class="mt-1 text-sm text-gray-600">Règlements enregistrés, rattachés à leurs factures.</p></div>
+        @if($derniersPaiements->isNotEmpty())
+            <div class="overflow-x-auto"><table class="w-full min-w-[620px] text-left text-sm"><caption class="sr-only">Derniers paiements du chantier</caption><thead class="bg-[#FAF9F7] text-gray-600"><tr><th scope="col" class="px-5 py-3">Facture</th><th scope="col" class="px-5 py-3">Fournisseur</th><th scope="col" class="px-5 py-3">Date</th><th scope="col" class="px-5 py-3">Référence</th><th scope="col" class="px-5 py-3 text-right">Montant</th></tr></thead><tbody class="divide-y divide-[#E7E5E1]">@foreach($derniersPaiements as $paiement)<tr><td class="px-5 py-3 font-semibold"><a href="{{ route('depenses.show', $paiement->depense) }}" class="hover:text-[#C31F28] hover:underline">{{ $paiement->depense?->numero_facture ?: $paiement->depense?->libelle }}</a></td><td class="px-5 py-3">{{ $paiement->depense?->fournisseur ?: 'Non renseigné' }}</td><td class="whitespace-nowrap px-5 py-3">{{ $paiement->date_paiement?->format('d/m/Y') }}</td><td class="px-5 py-3">{{ $paiement->reference }}</td><td class="whitespace-nowrap px-5 py-3 text-right font-semibold">{{ number_format((float) $paiement->montant, 2, ',', ' ') }} F</td></tr>@endforeach</tbody></table></div>
+        @else
+            <p class="px-5 py-7 text-sm text-gray-600 sm:px-8">Aucun paiement enregistré pour ce chantier.</p>
+        @endif
+    </section>
 </div>
 @endsection

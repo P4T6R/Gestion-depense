@@ -128,6 +128,16 @@ class DepensePolicy
         return false;
     }
 
+    public function recordPayment(User $user, Depense $depense): bool
+    {
+        return $user->role === 'comptable' && $depense->statut_validation === 'validee';
+    }
+
+    public function cancelPayment(User $user, Depense $depense): bool
+    {
+        return $user->role === 'comptable' && $depense->statut_validation === 'validee';
+    }
+
     /**
      * Determine whether the user can restore the model.
      */

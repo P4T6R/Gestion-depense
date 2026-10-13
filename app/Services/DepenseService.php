@@ -221,7 +221,7 @@ class DepenseService
         ];
     }
 
-    private function ensureInitialHistory(Depense $depense): void
+    public function ensureInitialHistory(Depense $depense): void
     {
         if ($depense->historique()->exists()) {
             return;
@@ -230,7 +230,7 @@ class DepenseService
         $this->recordHistory($depense, 'etat_initial', null, $depense->statut_validation, $depense->motif_rejet);
     }
 
-    private function recordHistory(Depense $depense, string $action, ?User $actor, ?string $previousStatus = null, ?string $reason = null): void
+    public function recordHistory(Depense $depense, string $action, ?User $actor, ?string $previousStatus = null, ?string $reason = null): void
     {
         $current = $depense->fresh();
         $snapshot = $current->only([
@@ -247,6 +247,13 @@ class DepenseService
         $snapshot['justificatifs'] = $current->justificatifs()->orderBy('id')->get()->map(fn ($file) => $file->only([
             'id', 'nom_fichier', 'disk', 'chemin_fichier', 'type_fichier', 'taille_fichier', 'sha256',
         ]))->all();
+        $snapshot['paiements'] = $current->paiements()->get()->map(fn ($payment) => [
+            'montant' => $payment->montant,
+            'date_paiement' => $payment->date_paiement?->toDateString(),
+            'mode' => $payment->mode,
+            'reference' => $payment->reference,
+            'annule_le' => $payment->annule_le?->toIso8601String(),
+        ])->all();
 
         $current->historique()->create([
             'version' => $current->version_courante,

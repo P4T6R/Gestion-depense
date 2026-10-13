@@ -56,6 +56,14 @@ php artisan justificatifs:empreintes
 
 La commande peut être relancée ; elle signale les fichiers manquants. Les nouveaux justificatifs reçoivent une empreinte SHA-256 à l’enregistrement. Le registre fournisseurs est accessible à l’administrateur. La saisie reconnaît automatiquement un fournisseur existant malgré les variantes d’accents, d’espaces et de casse. Un même fournisseur avec le même numéro de facture normalisé, ou un justificatif déjà joint à une autre facture, bloque la soumission. Sur la fiche, un rapprochement de fournisseur, montant et date affiche une alerte à vérifier sans bloquer, car ces trois valeurs peuvent aussi correspondre à deux achats distincts. Les factures anciennes reçoivent un instantané de leur état actuel lors de la migration ; les décisions antérieures à cette migration ne peuvent pas être reconstruites.
 
+## Budget et paiements
+
+Le tableau de bord et chaque fiche chantier distinguent : budget alloué, factures en attente (`en_attente` et `acceptee`), dépenses validées par la comptable, paiements enregistrés non annulés et solde disponible. Le solde disponible est **budget alloué − dépenses validées** ; les factures en attente n’y sont pas déduites. Le reste à payer est **dépenses validées − paiements enregistrés**. Ces montants proviennent des factures et du registre de paiements, séparément du champ historique `budget_consomme`.
+
+Seule la comptable peut enregistrer un paiement sur une facture validée. Plusieurs paiements sont possibles, chacun avec un montant, une date, un mode et une référence ; leur total ne peut pas dépasser la facture. Une annulation exige un motif, conserve l’enregistrement initial et retire son montant des totaux. Une facture est marquée `paye` uniquement quand la totalité est couverte.
+
+Les anciennes factures marquées `paye` sans enregistrement de paiement sont signalées **à rapprocher**. Elles ne sont pas comptées comme réellement payées tant que la comptable n’a pas confirmé leur règlement historique avec sa date et sa référence sur la fiche facture. Le registre atteste les paiements saisis dans le logiciel ; il ne réalise pas de rapprochement automatique avec une banque.
+
 Les montants agrégés de l’API sont des chaînes décimales exactes. L’étape d’approbation est `POST /api/depenses/{depense}/approve` avant la validation comptable. Les liens des justificatifs doivent passer par les routes protégées, jamais par `/storage/...` pour les nouveaux fichiers.
 
 ## Docker et production

@@ -95,6 +95,11 @@ class Depense extends Model
         return $this->hasMany(DepenseHistorique::class)->orderBy('id');
     }
 
+    public function paiements()
+    {
+        return $this->hasMany(Paiement::class)->orderBy('id');
+    }
+
     // ========== MUTATEURS (Setters) ==========
 
     // Recalculer le montant total depuis les lignes

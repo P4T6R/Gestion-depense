@@ -8,6 +8,7 @@ use App\Http\Requests\StoreDepenseRequest;
 use App\Http\Requests\UpdateDepenseRequest;
 use App\Models\Depense;
 use App\Services\DepenseService;
+use App\Services\PaiementService;
 use Illuminate\Http\Request;
 
 class DepenseController extends Controller
@@ -58,14 +59,20 @@ class DepenseController extends Controller
         return response()->json(['message' => 'Dépense créée avec succès', 'depense' => $depense], 201);
     }
 
-    public function show(Request $request, Depense $depense)
+    public function show(Request $request, Depense $depense, PaiementService $paiements)
     {
         $this->authorize('view', $depense);
 
-        return response()->json($depense->load([
+        $depense->load([
             'chantier', 'utilisateur', 'validateur', 'justificatifs', 'categorie', 'unite',
-            'lignes.categorieDepense', 'lignes.uniteMesure', 'historique',
-        ]));
+            'lignes.categorieDepense', 'lignes.uniteMesure', 'historique', 'paiements',
+        ]);
+        $paid = $paiements->paidAmount($depense);
+        $depense->setAttribute('montant_paye', $paid);
+        $depense->setAttribute('reste_a_payer', bcsub((string) $depense->prix_total, $paid, 2));
+        $depense->setAttribute('paiement_historique_a_rapprocher', $depense->statut_validation === 'validee' && $depense->statut_paiement === 'paye' && $depense->paiements->isEmpty());
+
+        return response()->json($depense);
     }
 
     public function update(UpdateDepenseRequest $request, Depense $depense)

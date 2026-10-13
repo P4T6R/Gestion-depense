@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\ChantierController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DepenseController;
 use App\Http\Controllers\Web\FournisseurController;
+use App\Http\Controllers\Web\PaiementController;
 use App\Http\Controllers\Web\UniteMesureController;
 use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
@@ -49,7 +50,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     // Tous (sauf comptable) peuvent consulter
-    Route::middleware('checkRole:administrateur,chef_chantier,directeur')->group(function () {
+    Route::middleware('checkRole:administrateur,chef_chantier,directeur,comptable')->group(function () {
         Route::get('/chantiers', [ChantierController::class, 'index'])->name('chantiers.index');
         Route::get('/chantiers/{chantier}', [ChantierController::class, 'show'])->name('chantiers.show');
     });
@@ -78,6 +79,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Comptable peut valider ou rejeter les dépenses
     Route::middleware('checkRole:comptable')->group(function () {
         Route::post('/depenses/{depense}/validate', [DepenseController::class, 'validateDepense'])->name('depenses.validate');
+        Route::post('/depenses/{depense}/paiements', [PaiementController::class, 'store'])->name('depenses.paiements.store');
+        Route::post('/depenses/{depense}/paiements/{paiement}/annuler', [PaiementController::class, 'cancel'])->name('depenses.paiements.cancel');
     });
 
     // ========== RAPPORTS ET EXPORTS (Admin et Comptable) ==========

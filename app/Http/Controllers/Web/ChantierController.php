@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Chantier;
+use App\Models\Paiement;
 use App\Models\User;
+use App\Services\ChantierFinancialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ChantierController extends Controller
 {
-    public function index()
+    public function index(ChantierFinancialService $finances)
     {
         $user = auth()->user();
 
@@ -23,11 +25,12 @@ class ChantierController extends Controller
             // Admin, Directeur, Comptable voient tous les chantiers
             $chantiers = Chantier::with('chefsChantier')->get();
         }
+        $syntheses = $finances->forChantiers($chantiers);
 
-        return view('chantiers.index', compact('chantiers'));
+        return view('chantiers.index', compact('chantiers', 'syntheses'));
     }
 
-    public function show(Chantier $chantier)
+    public function show(Chantier $chantier, ChantierFinancialService $finances)
     {
         $user = auth()->user();
 
@@ -42,8 +45,13 @@ class ChantierController extends Controller
 
         $chantier->load(['chefsChantier', 'depenses' => fn ($q) => $q->visibleTo($user)->with(['utilisateur', 'categorie', 'unite'])]);
         $chantier->setAttribute('depenses_count', $chantier->depenses->count());
+        $synthese = $finances->forChantier($chantier);
+        $derniersPaiements = Paiement::query()->whereNull('annule_le')
+            ->whereHas('depense', fn ($query) => $query->where('chantier_id', $chantier->id)->visibleTo($user))
+            ->with('depense:id,chantier_id,numero_facture,nom_produit,fournisseur')
+            ->latest('date_paiement')->latest('id')->limit(8)->get();
 
-        return view('chantiers.show', compact('chantier'));
+        return view('chantiers.show', compact('chantier', 'synthese', 'derniersPaiements'));
     }
 
     public function create()

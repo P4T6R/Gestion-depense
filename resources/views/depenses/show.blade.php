@@ -11,6 +11,9 @@
             <span>{{ session('success') }}</span>
         </div>
     @endif
+    @if($errors->any())
+        <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Veuillez corriger les informations :</p><ul class="mt-2 list-disc pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+    @endif
     @if($rapprochements->isNotEmpty())
         <section role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Factures à vérifier">
             <p class="flex items-center gap-2 font-semibold"><x-icon name="triangle-alert" class="size-5" /> Factures à vérifier</p>
@@ -509,6 +512,62 @@
         </div>
     </div>
 
+    @if($depense->statut_validation === 'validee')
+        <section class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8" aria-labelledby="paiements-title">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 id="paiements-title" class="flex items-center gap-2 text-xl font-bold text-gray-900"><x-icon name="banknote" class="size-5 text-[#D7232A]" /> Paiements de la facture</h2>
+                    <p class="mt-1 text-sm text-gray-600">Seuls les règlements enregistrés et non annulés figurent dans le montant payé.</p>
+                </div>
+                <span class="rounded-full bg-[#F8EEEE] px-3 py-1 text-xs font-semibold text-[#C31F28]">{{ (float) $resteAPayer <= 0 && ! $historiqueNonRapproche ? 'Payée' : ((float) $montantPaye > 0 ? 'Partiellement payée' : 'À payer') }}</span>
+            </div>
+            <dl class="mt-5 grid gap-3 sm:grid-cols-3">
+                <div class="rounded-xl bg-[#FCFBF9] p-4"><dt class="text-sm text-gray-600">Montant validé</dt><dd class="mt-1 text-xl font-semibold">{{ number_format((float) $depense->prix_total, 2, ',', ' ') }} F</dd></div>
+                <div class="rounded-xl bg-[#FCFBF9] p-4"><dt class="text-sm text-gray-600">Réellement payé</dt><dd class="mt-1 text-xl font-semibold">{{ number_format((float) $montantPaye, 2, ',', ' ') }} F</dd></div>
+                <div class="rounded-xl bg-[#FCFBF9] p-4"><dt class="text-sm text-gray-600">Reste à payer</dt><dd class="mt-1 text-xl font-semibold">{{ number_format((float) $resteAPayer, 2, ',', ' ') }} F</dd></div>
+            </dl>
+            @if($historiqueNonRapproche)
+                <p role="status" class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">Cette facture était marquée payée avant la création du registre. Son règlement n’entre pas encore dans les montants réellement payés. La comptable doit saisir sa date et sa référence pour le rapprocher.</p>
+            @endif
+
+            @can('recordPayment', $depense)
+                @if((float) $resteAPayer > 0)
+                    <form action="{{ route('depenses.paiements.store', $depense) }}" method="POST" class="mt-6 rounded-xl border border-[#E7E5E1] p-4 sm:p-5">
+                        @csrf
+                        <h3 class="mb-4 font-semibold text-gray-900">{{ $historiqueNonRapproche ? 'Rapprocher le paiement historique' : 'Enregistrer un paiement' }}</h3>
+                        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <div><label for="paiement-montant" class="mb-1 block text-sm font-medium text-gray-700">Montant (F) *</label><input id="paiement-montant" name="montant" type="number" step="0.01" min="0.01" max="{{ $resteAPayer }}" value="{{ old('montant', $resteAPayer) }}" required class="w-full rounded-xl border border-gray-200 px-3 py-2.5"></div>
+                            <div><label for="paiement-date" class="mb-1 block text-sm font-medium text-gray-700">Date du paiement *</label><input id="paiement-date" name="date_paiement" type="date" max="{{ now()->toDateString() }}" value="{{ old('date_paiement', now()->toDateString()) }}" required class="w-full rounded-xl border border-gray-200 px-3 py-2.5"></div>
+                            <div><label for="paiement-mode" class="mb-1 block text-sm font-medium text-gray-700">Mode *</label><select id="paiement-mode" name="mode" required class="w-full rounded-xl border border-gray-200 px-3 py-2.5"><option value="virement" @selected(old('mode') === 'virement')>Virement</option><option value="especes" @selected(old('mode') === 'especes')>Espèces</option><option value="cheque" @selected(old('mode') === 'cheque')>Chèque</option><option value="mobile_money" @selected(old('mode') === 'mobile_money')>Mobile money</option><option value="autre" @selected(old('mode') === 'autre')>Autre</option></select></div>
+                            <div><label for="paiement-reference" class="mb-1 block text-sm font-medium text-gray-700">Référence ou reçu *</label><input id="paiement-reference" name="reference" value="{{ old('reference') }}" maxlength="255" required placeholder="N° de transaction ou de reçu" class="w-full rounded-xl border border-gray-200 px-3 py-2.5"></div>
+                        </div>
+                        @if($historiqueNonRapproche)
+                            <label class="mt-4 flex items-start gap-2 text-sm text-gray-700"><input type="checkbox" name="reprise_historique" value="1" required @checked(old('reprise_historique')) class="mt-1 accent-[#D7232A]"><span>Je confirme que ce paiement historique couvre la totalité de la facture et que la date et la référence ont été vérifiées.</span></label>
+                        @endif
+                        <button class="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#D7232A] px-5 text-sm font-semibold text-white hover:bg-[#B91C23]"><x-icon name="save" class="size-4" />Enregistrer le paiement</button>
+                    </form>
+                @endif
+            @endcan
+
+            <div class="mt-6">
+                <h3 class="mb-3 font-semibold text-gray-900">Historique des règlements</h3>
+                @forelse($depense->paiements->reverse() as $paiement)
+                    <div class="mb-3 rounded-xl border border-[#E7E5E1] p-4 {{ $paiement->annule_le ? 'opacity-70' : '' }}">
+                        <div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-semibold">{{ number_format((float) $paiement->montant, 2, ',', ' ') }} F · {{ str_replace('_', ' ', ucfirst($paiement->mode)) }}</p><p class="mt-1 text-sm text-gray-600">{{ $paiement->date_paiement?->format('d/m/Y') }} · Réf. {{ $paiement->reference }} · {{ $paiement->enregistre_par_nom }}</p></div><span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $paiement->annule_le ? 'bg-gray-100 text-gray-600' : 'bg-[#F8EEEE] text-[#C31F28]' }}">{{ $paiement->annule_le ? 'Annulé' : ($paiement->reprise_historique ? 'Reprise historique' : 'Enregistré') }}</span></div>
+                        @if($paiement->annule_le)<p class="mt-2 text-sm text-gray-600">Annulé le {{ $paiement->annule_le->format('d/m/Y H:i') }} par {{ $paiement->annule_par_nom }} : {{ $paiement->motif_annulation }}</p>@endif
+                        @if(! $paiement->annule_le)
+                            @can('cancelPayment', $depense)
+                                <details class="mt-3 border-t border-[#E7E5E1] pt-3 text-sm"><summary class="cursor-pointer font-medium text-[#C31F28]">Annuler ce paiement</summary><form action="{{ route('depenses.paiements.cancel', [$depense, $paiement]) }}" method="POST" class="mt-3 flex flex-wrap items-end gap-3">@csrf<div class="min-w-60 flex-1"><label for="annulation-{{ $paiement->id }}" class="mb-1 block font-medium">Motif d’annulation *</label><input id="annulation-{{ $paiement->id }}" name="motif_annulation" required minlength="10" maxlength="10000" class="w-full rounded-xl border border-gray-200 px-3 py-2.5"></div><button class="min-h-11 rounded-xl border border-red-200 px-4 font-semibold text-red-700 hover:bg-red-50">Confirmer l’annulation</button></form></details>
+                            @endcan
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-600">Aucun paiement enregistré pour cette facture.</p>
+                @endforelse
+            </div>
+        </section>
+    @endif
+
     <section class="rounded-2xl border border-[#E7E5E1] bg-white p-5 sm:p-8" aria-labelledby="historique-title">
         <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -530,6 +589,9 @@
                         'approbation' => 'Approbation du directeur',
                         'rejet' => 'Rejet',
                         'validation' => 'Validation comptable',
+                        'paiement' => 'Paiement enregistré',
+                        'reprise_paiement' => 'Paiement historique rapproché',
+                        'annulation_paiement' => 'Paiement annulé',
                         'suppression' => 'Suppression',
                     ];
                     $snapshot = $event->instantane ?? [];

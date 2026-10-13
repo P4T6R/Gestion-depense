@@ -33,13 +33,18 @@
     <!-- Tableau des chantiers -->
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full min-w-[1080px]">
+                <caption class="sr-only">Budget et situation financière par chantier</caption>
                 <thead class="bg-[#FAF9F7] text-[#444]">
                     <tr>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Nom du Chantier</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Localisation</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Chef de Chantier</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold">Budget</th>
+                        <th class="px-4 py-4 text-right text-sm font-semibold">Alloué</th>
+                        <th class="px-4 py-4 text-right text-sm font-semibold">En attente</th>
+                        <th class="px-4 py-4 text-right text-sm font-semibold">Validé</th>
+                        <th class="px-4 py-4 text-right text-sm font-semibold">Payé</th>
+                        <th class="px-4 py-4 text-right text-sm font-semibold">Solde disponible</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Statut</th>
                         <th class="px-6 py-4 text-right text-sm font-semibold">Actions</th>
                     </tr>
@@ -73,8 +78,11 @@
                                 <span class="text-gray-400 italic">Non assigné</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4">
-                            <span class="text-sm font-semibold text-gray-900">{{ number_format($chantier->budget_alloue, 0, ',', ' ') }} F</span>
+                        <td class="whitespace-nowrap px-4 py-4 text-right text-sm">{{ number_format((float) $syntheses[$chantier->id]['budget_alloue'], 0, ',', ' ') }} F</td>
+                        <td class="whitespace-nowrap px-4 py-4 text-right text-sm">{{ number_format((float) $syntheses[$chantier->id]['factures_en_attente'], 0, ',', ' ') }} F</td>
+                        <td class="whitespace-nowrap px-4 py-4 text-right text-sm">{{ number_format((float) $syntheses[$chantier->id]['depenses_validees'], 0, ',', ' ') }} F</td>
+                        <td class="whitespace-nowrap px-4 py-4 text-right text-sm">{{ number_format((float) $syntheses[$chantier->id]['montant_paye'], 0, ',', ' ') }} F</td>
+                        <td class="whitespace-nowrap px-4 py-4 text-right text-sm font-semibold {{ (float) $syntheses[$chantier->id]['solde_disponible'] < 0 ? 'text-[#C31F28]' : 'text-gray-900' }}">{{ number_format((float) $syntheses[$chantier->id]['solde_disponible'], 0, ',', ' ') }} F
                         </td>
                         <td class="px-6 py-4">
                             @php
@@ -109,7 +117,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="10" class="px-6 py-8 text-center text-gray-500">
                             <x-icon name="inbox" class="size-8 mb-3" />
                             <p>Aucun chantier trouvé.</p>
                         </td>

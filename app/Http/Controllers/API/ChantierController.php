@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Chantier;
 use App\Models\User;
+use App\Services\ChantierFinancialService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -13,7 +14,7 @@ class ChantierController extends Controller
     /**
      * Liste des chantiers
      */
-    public function index(Request $request)
+    public function index(Request $request, ChantierFinancialService $finances)
     {
         $user = $request->user();
 
@@ -33,6 +34,8 @@ class ChantierController extends Controller
         }
 
         $chantiers = $query->latest()->get();
+        $summaries = $finances->forChantiers($chantiers);
+        $chantiers->each(fn ($chantier) => $chantier->setAttribute('finances', $summaries[$chantier->id]));
 
         return response()->json($chantiers);
     }
@@ -86,7 +89,7 @@ class ChantierController extends Controller
     /**
      * Détails d'un chantier
      */
-    public function show(Request $request, Chantier $chantier)
+    public function show(Request $request, Chantier $chantier, ChantierFinancialService $finances)
     {
         $user = $request->user();
 
@@ -98,8 +101,9 @@ class ChantierController extends Controller
         $chantier->load([
             'createur',
             'chefsChantier',
-            'depenses' => fn ($q) => $q->visibleTo($user)->with(['utilisateur', 'justificatifs', 'categorie', 'unite']),
+            'depenses' => fn ($q) => $q->visibleTo($user)->with(['utilisateur', 'justificatifs', 'categorie', 'unite', 'paiements']),
         ]);
+        $chantier->setAttribute('finances', $finances->forChantier($chantier));
 
         return response()->json($chantier);
     }
@@ -201,7 +205,7 @@ class ChantierController extends Controller
     /**
      * Statistiques du chantier
      */
-    public function statistiques(Request $request, Chantier $chantier)
+    public function statistiques(Request $request, Chantier $chantier, ChantierFinancialService $finances)
     {
         $user = $request->user();
 
@@ -221,6 +225,6 @@ class ChantierController extends Controller
             'depenses_rejetees' => $chantier->depenses()->where('statut_validation', 'rejetee')->count(),
         ];
 
-        return response()->json($stats);
+        return response()->json($stats + $finances->forChantier($chantier));
     }
 }

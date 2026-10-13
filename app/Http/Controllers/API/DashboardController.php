@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Chantier;
 use App\Models\Depense;
 use App\Models\User;
+use App\Services\ChantierFinancialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +15,7 @@ class DashboardController extends Controller
     /**
      * Dashboard global (Admin, Comptable, Directeur)
      */
-    public function index(Request $request)
+    public function index(Request $request, ChantierFinancialService $finances)
     {
         $user = $request->user();
 
@@ -80,6 +81,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'stats' => $stats,
+            'finances' => $finances->totals(Chantier::all(['id', 'budget_alloue'])),
             'chantiers_alerte' => $chantiersAlerte,
             'depenses_recentes' => $depensesRecentes,
             'depenses_par_categorie' => $depensesParCategorie,
