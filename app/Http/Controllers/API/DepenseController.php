@@ -18,6 +18,7 @@ class DepenseController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Depense::class);
+        $request->validate(['q' => 'nullable|string|max:100']);
         $query = Depense::visibleTo($request->user())->with([
             'chantier', 'utilisateur', 'validateur', 'justificatifs', 'categorie', 'unite',
             'lignes.categorieDepense', 'lignes.uniteMesure',
@@ -30,6 +31,12 @@ class DepenseController extends Controller
                     $query->where($filter, $request->input($filter));
                 }
             }
+        }
+        if ($request->filled('q')) {
+            $term = '%'.addcslashes(trim($request->input('q')), '%_\\').'%';
+            $query->where(fn ($q) => $q->where('fournisseur', 'like', $term)
+                ->orWhere('numero_facture', 'like', $term)
+                ->orWhere('nom_produit', 'like', $term));
         }
 
         return response()->json($query->latest()->paginate(20));

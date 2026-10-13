@@ -1,8 +1,12 @@
 # Gestion des dépenses
 
-Application Laravel pour suivre les chantiers, factures multi-articles, justificatifs et budgets. Le chef de chantier saisit ses dépenses ; le directeur approuve ou rejette les factures en attente ; le comptable valide les factures approuvées. Une facture créée par un directeur passe directement à la comptable : le directeur ne peut ni l’approuver ni la rejeter lui-même. Après un rejet, le créateur peut corriger la facture et la soumettre à nouveau ; l’historique conserve chaque version, décision, auteur, date et motif. L’approbation seule ne consomme pas le budget et ne permet pas de marquer la facture payée. Le budget consommé est mis à jour après validation comptable ; le parcours de paiement reste à définir. Le web et l’API partagent les mêmes validations, autorisations et services métier.
+Application Laravel pour suivre les chantiers, factures multi-articles, justificatifs et budgets. Le chef de chantier saisit ses dépenses ; le directeur approuve ou rejette les factures en attente ; le comptable valide les factures approuvées. Une facture créée par un directeur passe directement à la comptable : le directeur ne peut ni l’approuver ni la rejeter lui-même. Après un rejet, le créateur peut corriger la facture et la soumettre à nouveau ; l’historique conserve chaque version, décision, auteur, date et motif. L’approbation seule ne consomme pas le budget et ne permet pas de marquer la facture payée. Le budget consommé est mis à jour après validation comptable ; la comptable peut ensuite enregistrer des paiements partiels. Le web et l’API partagent les mêmes validations, autorisations et services métier.
 
 Voir [la revue d’architecture et les corrections](docs/ARCHITECTURE-REVIEW.md).
+
+## Application mobile chef de chantier
+
+Le projet Flutter Android/iOS se trouve dans [`mobile/chef_chantier`](mobile/chef_chantier/README.md). Il permet au chef de chantier de scanner une facture, vérifier les champs proposés par OCR, suivre ses factures et corriger un rejet. La connexion mobile utilise `POST /api/mobile/login`.
 
 ## Développement
 

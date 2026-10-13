@@ -1,0 +1,27 @@
+name: gestion_depenses_terrain
+description: Application terrain de gestion des factures des chefs de chantier.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_secure_storage: ^11.2.0
+  google_mlkit_text_recognition: ^0.16.0
+  http: ^1.6.0
+  image_picker: ^1.2.4
+  intl: ^0.20.3
+  pdfrx: '>=2.4.8 <2.5.0'
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

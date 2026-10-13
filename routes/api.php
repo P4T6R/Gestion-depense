@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 // ========== ROUTES PUBLIQUES ==========
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/mobile/login', [AuthController::class, 'mobileLogin'])->middleware('throttle:login');
 
 // ========== ROUTES PROTÉGÉES (Authentification requise) ==========
 Route::middleware(['auth:sanctum', 'active'])->group(function () {

@@ -47,6 +47,32 @@ class AuthController extends Controller
         ]);
     }
 
+    /** Connexion réservée à l'application terrain, sans révoquer les autres appareils. */
+    public function mobileLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|max:1024',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages(['email' => ['Les identifiants sont incorrects.']]);
+        }
+        if (! $user->is_active) {
+            return response()->json(['message' => 'Votre compte a été désactivé. Contactez l\'administrateur.'], 403);
+        }
+        if (! $user->isChefChantier()) {
+            return response()->json(['message' => 'Cette application est réservée aux chefs de chantier.'], 403);
+        }
+
+        return response()->json([
+            'message' => 'Connexion réussie',
+            'user' => $user,
+            'token' => $user->createToken('mobile_chef')->plainTextToken,
+        ]);
+    }
+
     /**
      * Déconnexion utilisateur
      */
