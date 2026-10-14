@@ -31,10 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (error) { if (mounted) setState(() => _error = error); }
   }
   void _chooseSite() {
-    showModalBottomSheet<void>(context: context, showDragHandle: true, builder: (context) => SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(20, 8, 20, 24), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+    showModalBottomSheet<void>(context: context, showDragHandle: true, isScrollControlled: true, builder: (context) => SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(20, 8, 20, 24), child: ConstrainedBox(constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7), child: ListView(shrinkWrap: true, children: [
       Text('Choisir un chantier', style: Theme.of(context).textTheme.titleLarge), const SizedBox(height: 14),
       ...widget.sites.map((site) => ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.apartment_rounded, color: Brand.teal), title: Text(site.name), subtitle: site.location.isEmpty ? null : Text(site.location), trailing: site.id == widget.site.id ? const Icon(Icons.check_rounded, color: Brand.teal) : null, onTap: () { Navigator.pop(context); widget.onSiteChanged(site); })),
-    ]))));
+    ])))));
   }
   @override
   Widget build(BuildContext context) => SafeArea(child: RefreshIndicator(onRefresh: _load, child: CustomScrollView(physics: const AlwaysScrollableScrollPhysics(), slivers: [
@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('Bonjour ${widget.user.firstName}', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 3), const Text('Bienvenue sur votre espace terrain', style: TextStyle(color: Color(0xFF66777A))),
-      ])), Container(width: 48, height: 48, decoration: BoxDecoration(color: Brand.mint, borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.engineering_rounded, color: Brand.teal))]),
+      ])), const SizedBox(width: 12), Container(width: 42, height: 42, decoration: BoxDecoration(color: Brand.mint, borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.engineering_rounded, color: Brand.teal))]),
       const SizedBox(height: 24),
       Card(child: InkWell(onTap: _chooseSite, borderRadius: BorderRadius.circular(20), child: Padding(padding: const EdgeInsets.all(17), child: Row(children: [
         Container(width: 44, height: 44, decoration: BoxDecoration(color: Brand.mint, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.location_city_rounded, color: Brand.teal)),
@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const SizedBox(height: 24),
       Container(padding: const EdgeInsets.all(22), decoration: BoxDecoration(color: Brand.tealDark, borderRadius: BorderRadius.circular(24)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Icon(Icons.document_scanner_outlined, color: Color(0xFFBFE6DD), size: 28), const SizedBox(height: 18),
-        const Text('Une facture à envoyer ?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 23)),
+        const Text('Une facture à envoyer ?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
         const SizedBox(height: 5), const Text('Photographiez-la. Vérifiez les informations. C’est envoyé.', style: TextStyle(color: Color(0xFFDAEFEB), height: 1.4)),
         const SizedBox(height: 19), FilledButton.icon(onPressed: widget.onScan, icon: const Icon(Icons.camera_alt_outlined), label: const Text('Scanner une facture'), style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Brand.tealDark)),
       ])),
@@ -61,11 +61,17 @@ class _HomeScreenState extends State<HomeScreen> {
       const SizedBox(height: 12),
       if (_error != null) Card(child: Padding(padding: const EdgeInsets.all(15), child: Row(children: [const Expanded(child: Text('Données indisponibles.')), TextButton(onPressed: _load, child: const Text('Réessayer'))])))
       else if (_stats == null) const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
-      else Row(children: [
-        Expanded(child: _Metric(value: '${_stats!['total_depenses'] ?? 0}', label: 'Factures', icon: Icons.receipt_long_outlined)),
-        const SizedBox(width: 10), Expanded(child: _Metric(value: '${_stats!['rejetees'] ?? 0}', label: 'À corriger', icon: Icons.edit_note_rounded, attention: true)),
-        const SizedBox(width: 10), Expanded(child: _Metric(value: '${(_stats!['en_attente'] as num? ?? 0) + (_stats!['acceptees'] as num? ?? 0)}', label: 'En cours', icon: Icons.schedule_rounded)),
-      ]),
+      else LayoutBuilder(builder: (context, constraints) {
+        final metrics = [
+          _Metric(value: '${_stats!['total_depenses'] ?? 0}', label: 'Factures', icon: Icons.receipt_long_outlined),
+          _Metric(value: '${_stats!['rejetees'] ?? 0}', label: 'À corriger', icon: Icons.edit_note_rounded, attention: true),
+          _Metric(value: '${(_stats!['en_attente'] as num? ?? 0) + (_stats!['acceptees'] as num? ?? 0)}', label: 'En cours', icon: Icons.schedule_rounded),
+        ];
+        if (constraints.maxWidth < 360 || MediaQuery.textScalerOf(context).scale(1) > 1.2) {
+          return Column(children: [for (final metric in metrics) Padding(padding: const EdgeInsets.only(bottom: 8), child: metric)]);
+        }
+        return Row(children: [for (var index = 0; index < metrics.length; index++) ...[if (index > 0) const SizedBox(width: 10), Expanded(child: metrics[index])]]);
+      }),
       const SizedBox(height: 29), SectionTitle('Factures récentes', trailing: TextButton(onPressed: widget.onViewAll, child: const Text('Voir tout'))), const SizedBox(height: 12),
       if (_page != null && _page!.items.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(22), child: Text('Aucune facture pour ce chantier. Scannez la première pour commencer.'))),
       if (_page != null) ..._page!.items.take(3).map((expense) => Padding(padding: const EdgeInsets.only(bottom: 9), child: ExpenseTile(expense: expense, onTap: () => widget.onExpense(expense)))),

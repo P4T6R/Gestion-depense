@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) => Scaffold(body: SafeArea(child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 420), child: AutofillGroup(child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Container(width: 64, height: 64, decoration: BoxDecoration(color: Brand.teal, borderRadius: BorderRadius.circular(20)), child: const Icon(Icons.apartment_rounded, color: Colors.white, size: 33)),
     const SizedBox(height: 42),
-    Text('Le terrain,\nen toute simplicité.', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 37, height: 1.1)),
+    Text('Le terrain,\nen toute simplicité.', style: Theme.of(context).textTheme.headlineLarge?.copyWith(height: 1.15)),
     const SizedBox(height: 12),
     const Text('Vos factures et leur suivi, directement depuis votre chantier.', style: TextStyle(fontSize: 16, color: Color(0xFF66777A), height: 1.5)),
     const SizedBox(height: 35),

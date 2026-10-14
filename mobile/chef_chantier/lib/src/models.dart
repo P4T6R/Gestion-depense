@@ -40,7 +40,6 @@ class Chantier {
   final String name;
   final String location;
   final String status;
-  final String deliveryStatus;
   const Chantier({required this.id, required this.name, required this.location, required this.status});
   factory Chantier.fromJson(Object? json) {
     final map = asMap(json);
@@ -72,7 +71,6 @@ class Attachment {
 
 class ExpenseLine {
   final String description;
-  final String observations;
   final String quantity;
   final String unitPrice;
   final int? categoryId;
@@ -115,8 +113,10 @@ class Expense {
   final String invoiceNumber;
   final String? invoiceDate;
   final String description;
+  final String observations;
   final String amount;
   final String status;
+  final String deliveryStatus;
   final String? rejectionReason;
   final int? categoryId;
   final int? unitId;

@@ -53,7 +53,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         const SizedBox(height: 22),
         TextField(controller: _search, onChanged: (_) { _debounce?.cancel(); _debounce = Timer(const Duration(milliseconds: 380), _reload); }, decoration: const InputDecoration(hintText: 'Fournisseur, numéro, objet…', prefixIcon: Icon(Icons.search_rounded))),
         const SizedBox(height: 14),
-        SizedBox(height: 42, child: ListView(scrollDirection: Axis.horizontal, children: _filters.entries.map((entry) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(entry.value), selected: _status == entry.key, onSelected: (_) { setState(() => _status = entry.key); _reload(); }))).toList())),
+        SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: _filters.entries.map((entry) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(entry.value), selected: _status == entry.key, onSelected: (_) { setState(() => _status = entry.key); _reload(); }))).toList())),
         const SizedBox(height: 18),
       ]))),
       if (_items.isEmpty && _loading) const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))

@@ -42,9 +42,9 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
       Expanded(child: RefreshIndicator(onRefresh: _load, child: ListView(padding: const EdgeInsets.fromLTRB(20, 8, 20, 26), children: [
         ExpenseStatus(expense.status), const SizedBox(height: 18),
         Text(expense.supplier.isNotEmpty ? expense.supplier : expense.description.isNotEmpty ? expense.description : 'Facture #${expense.id}', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 7), Text(money(expense.amount), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Brand.teal)),
+        const SizedBox(height: 7), Text(money(expense.amount), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Brand.teal)),
         const SizedBox(height: 22),
-        if (expense.status == 'rejetee') Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Brand.amberSurface, borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Row(children: [Icon(Icons.error_outline_rounded, color: Brand.amber), SizedBox(width: 8), Text('Correction demandée', style: TextStyle(fontWeight: FontWeight.w800, color: Brand.amber))]), const SizedBox(height: 8), Text(expense.rejectionReason ?? 'Consultez la facture avant de la renvoyer.')]))
+        if (expense.status == 'rejetee') Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Brand.amberSurface, borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Row(children: [Icon(Icons.error_outline_rounded, color: Brand.amber), SizedBox(width: 8), Expanded(child: Text('Correction demandée', style: TextStyle(fontWeight: FontWeight.w800, color: Brand.amber)))]), const SizedBox(height: 8), Text(expense.rejectionReason ?? 'Consultez la facture avant de la renvoyer.')]))
         else _Progress(status: expense.status),
         const SizedBox(height: 25), SectionTitle('Informations'), const SizedBox(height: 12),
         Card(child: Column(children: [
@@ -75,7 +75,15 @@ class _InfoRow extends StatelessWidget {
   final String value;
   const _InfoRow(this.label, this.value);
   @override
-  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15), child: Row(children: [SizedBox(width: 95, child: Text(label, style: const TextStyle(color: Color(0xFF66777A)))), Expanded(child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w600)))]));
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15), child: LayoutBuilder(builder: (context, constraints) {
+    if (constraints.maxWidth < 250 || MediaQuery.textScalerOf(context).scale(1) > 1.2) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: const TextStyle(color: Color(0xFF66777A))),
+        const SizedBox(height: 4), Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ]);
+    }
+    return Row(children: [Expanded(flex: 2, child: Text(label, style: const TextStyle(color: Color(0xFF66777A)))), const SizedBox(width: 8), Expanded(flex: 3, child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w600)))]);
+  }));
 }
 
 class _Progress extends StatelessWidget {

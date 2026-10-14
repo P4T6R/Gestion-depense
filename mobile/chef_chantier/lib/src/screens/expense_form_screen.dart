@@ -153,7 +153,14 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
             for (var index = 0; index < _lines.length; index++) Padding(padding: const EdgeInsets.only(bottom: 12), child: Card(child: Padding(padding: const EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Ligne ${index + 1}', style: Theme.of(context).textTheme.titleMedium), const SizedBox(height: 12),
               TextFormField(controller: _lines[index].description, decoration: const InputDecoration(labelText: 'Désignation *'), validator: _required), const SizedBox(height: 9),
-              Row(children: [Expanded(child: TextFormField(controller: _lines[index].quantity, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Quantité *'), validator: (value) => _lineNumber(value, max: 99999999.99))), const SizedBox(width: 9), Expanded(child: TextFormField(controller: _lines[index].unitPrice, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Prix unitaire *'), validator: (value) => _lineNumber(value, zeroAllowed: true)))]),
+              LayoutBuilder(builder: (context, constraints) {
+                final quantity = TextFormField(controller: _lines[index].quantity, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Quantité *'), validator: (value) => _lineNumber(value, max: 99999999.99));
+                final unitPrice = TextFormField(controller: _lines[index].unitPrice, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Prix unitaire *'), validator: (value) => _lineNumber(value, zeroAllowed: true));
+                if (constraints.maxWidth < 320 || MediaQuery.textScalerOf(context).scale(1) > 1.2) {
+                  return Column(children: [quantity, const SizedBox(height: 9), unitPrice]);
+                }
+                return Row(children: [Expanded(child: quantity), const SizedBox(width: 9), Expanded(child: unitPrice)]);
+              }),
               const SizedBox(height: 9),
               DropdownButtonFormField<int>(value: _categories!.any((c) => c.id == _lines[index].categoryId) ? _lines[index].categoryId : null, isExpanded: true, decoration: const InputDecoration(labelText: 'Catégorie'), items: _categories!.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => _lines[index].categoryId = value),
               const SizedBox(height: 9),
