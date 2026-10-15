@@ -6,7 +6,7 @@ Voir [la revue d’architecture et les corrections](docs/ARCHITECTURE-REVIEW.md)
 
 ## Développement
 
-Prérequis : PHP 8.2 avec les extensions Laravel, PDO MySQL, BCMath, XMLWriter et ZIP ; Composer 2 ; MySQL 8 ; Node 22.12 minimum. Tailwind 4 nécessite un navigateur moderne.
+Prérequis : PHP 8.2 avec les extensions Laravel, PDO MySQL, BCMath, XMLWriter et ZIP ; Composer 2 ; MySQL 8 ; Node 22.13 minimum. Tailwind 4 nécessite un navigateur moderne.
 
 ```bash
 composer install
