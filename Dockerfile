@@ -1,72 +1,92 @@
-# Image PHP 8.2 avec FPM
-FROM php:8.2-fpm AS app
+# syntax=docker/dockerfile:1.7
 
-# Arguments
-ARG user=www
-ARG uid=1000
+FROM composer:2.8 AS composer-bin
 
-# Installer les dépendances système
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    nginx \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+FROM php:8.4-fpm-bookworm AS php-base
 
-# Installer Node.js (pour le build Vite)
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV APP_HOME=/var/www \
+    COMPOSER_ALLOW_SUPERUSER=1
 
-# Installer les extensions PHP nécessaires
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        default-mysql-client \
+        gosu \
+        libfcgi-bin \
+        libfreetype6-dev \
+        libicu-dev \
+        libjpeg62-turbo-dev \
+        libonig-dev \
+        libpng-dev \
+        libxml2-dev \
+        libzip-dev \
+        unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        bcmath \
+        exif \
+        gd \
+        intl \
+        mbstring \
+        opcache \
+        pcntl \
+        pdo_mysql \
+        xml \
+        xmlwriter \
+        zip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Installer Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Créer l'utilisateur système
-RUN useradd -G www-data -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
-
-# Définir le répertoire de travail
+COPY --from=composer-bin /usr/bin/composer /usr/local/bin/composer
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/php/production.ini /usr/local/etc/php/conf.d/production.ini
 
-WORKDIR /var/www
+WORKDIR ${APP_HOME}
 
-# Copier les fichiers du projet
-COPY . /var/www
+FROM php-base AS vendor
 
-# Les secrets sont injectés au démarrage, jamais copiés dans l’image.
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --prefer-dist \
+    --optimize-autoloader
 
-# Installer les dépendances PHP
-RUN composer install --optimize-autoloader --no-dev
+FROM node:22-bookworm-slim AS frontend
 
-# Build des assets frontend (génère public/build/manifest.json)
-RUN npm ci && npm run build && rm -rf node_modules
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY resources ./resources
+COPY public ./public
+COPY vite.config.js ./
+RUN npm run build
 
-# Permissions
-RUN chown -R $user:www-data /var/www
-RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+FROM php-base AS app
 
-# Copier le script d'entrypoint
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY --chown=www-data:www-data . .
+COPY --from=vendor --chown=www-data:www-data /var/www/vendor ./vendor
+COPY --from=frontend --chown=www-data:www-data /app/public/build ./public/build
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 
-# Exposer le port 9000 pour PHP-FPM
+RUN chmod 0755 /usr/local/bin/docker-entrypoint \
+    && mkdir -p storage/app/public storage/app/private storage/framework/cache/data \
+        storage/framework/sessions storage/framework/views storage/logs bootstrap/cache /var/www/backups \
+    && chown -R www-data:www-data storage bootstrap/cache /var/www/backups \
+    && composer dump-autoload --no-dev --classmap-authoritative --no-interaction \
+    && php artisan package:discover --ansi
+
 EXPOSE 9000
+ENTRYPOINT ["docker-entrypoint"]
+CMD ["php-fpm", "-F"]
 
-# Utiliser l'entrypoint personnalisé
-ENTRYPOINT ["docker-entrypoint.sh"]
+FROM nginx:1.28-alpine AS web
 
-# Nginx et PHP livrent les assets issus du même build ; aucun volume ne masque le code.
-FROM nginx:alpine AS web
 COPY --from=app /var/www/public /var/www/public
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
 EXPOSE 80
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
+    CMD wget --quiet --spider http://127.0.0.1/login || exit 1
 CMD ["nginx", "-g", "daemon off;"]

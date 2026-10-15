@@ -1,93 +1,118 @@
+name: gestion-depense
+
+x-app-service: &app-service
+  image: gestion-depense-app:local
+  env_file:
+    - .env.docker
+  volumes:
+    - app-storage:/var/www/storage
+    - app-backups:/var/www/backups
+  networks:
+    - backend
+  security_opt:
+    - no-new-privileges:true
+
 services:
-  # Application Laravel
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: app
-    container_name: suivi-depense-app
-    restart: unless-stopped
-    working_dir: /var/www
-    environment:
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_URL: ${APP_URL:?Définir l’URL publique HTTPS}
-      SESSION_SECURE_COOKIE: "true"
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
-      APP_KEY: ${APP_KEY:?Définir une clé Laravel stable}
-      DB_CONNECTION: mysql
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_DATABASE: ${MYSQL_DATABASE:-suivi_depense}
-      DB_USERNAME: ${MYSQL_USER:-suivi_user}
-      DB_PASSWORD: ${MYSQL_PASSWORD:?Définir le mot de passe MySQL}
-    volumes:
-      - app-storage:/var/www/storage
-    networks:
-      - suivi-depense
-    depends_on:
-      db:
-        condition: service_healthy
-
-  # Serveur Nginx
-  nginx:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: web
-    container_name: suivi-depense-nginx
-    restart: unless-stopped
-    ports:
-      - "${NGINX_BIND_ADDRESS:-127.0.0.1}:${NGINX_PORT:-8080}:80"
-    networks:
-      - suivi-depense
-    depends_on:
-      - app
-
-  # Base de données MySQL
   db:
-    image: mysql:8.0
-    container_name: suivi-depense-db
+    image: mysql:8.4
     restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Définir le mot de passe root MySQL}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-suivi_depense}
-      MYSQL_USER: ${MYSQL_USER:-suivi_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Définir le mot de passe MySQL}
+    env_file:
+      - .env.docker
     volumes:
-      - dbdata:/var/lib/mysql
+      - db-data:/var/lib/mysql
     networks:
-      - suivi-depense
+      - backend
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root --password=\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
       interval: 5s
       timeout: 5s
       start_period: 30s
       retries: 20
-    command: --default-authentication-plugin=mysql_native_password
 
-  # phpMyAdmin (optionnel - pour gérer la base de données)
-  phpmyadmin:
-    image: phpmyadmin:latest
-    profiles: ["tools"]
-    container_name: suivi-depense-phpmyadmin
+  migrate:
+    <<: *app-service
+    restart: "no"
+    command: ["php", "artisan", "migrate", "--force"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    <<: *app-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
     restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  queue:
+    <<: *app-service
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "database", "--queue=mail,default", "--sleep=2", "--tries=3", "--timeout=60", "--max-time=3600"]
+    stop_grace_period: 90s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  scheduler:
+    <<: *app-service
+    restart: unless-stopped
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    image: gestion-depense-web:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    networks:
+      - frontend
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      app:
+        condition: service_healthy
+
+  phpmyadmin:
+    image: phpmyadmin:5.2-apache
+    profiles: ["tools"]
+    restart: unless-stopped
+    env_file:
+      - .env.docker
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
     ports:
       - "127.0.0.1:8081:80"
     networks:
-      - suivi-depense
+      - backend
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 networks:
-  suivi-depense:
-    driver: bridge
+  frontend:
+  backend:
 
 volumes:
-  dbdata:
-    driver: local
+  db-data:
   app-storage:
-    driver: local
+  app-backups:

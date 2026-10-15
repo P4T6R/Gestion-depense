@@ -13,6 +13,7 @@
 .env
 .env.*
 !.env.example
+!.env.docker.example
 .env.backup
 .env.local
 
@@ -32,11 +33,6 @@ phpunit.xml
 /storage/*.key
 /storage/logs/*.log
 /bootstrap/cache/*
-
-# Documentation
-README.md
-CHANGELOG.md
-LICENSE
 
 # Fichiers temporaires
 *.log
