@@ -26,7 +26,7 @@ class DepenseController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $query = Depense::visibleTo($user)->with(['chantier', 'utilisateur', 'categorie', 'unite']);
+        $query = Depense::visibleTo($user);
 
         // Filtrer selon le rôle
         switch ($user->role) {
@@ -50,12 +50,22 @@ class DepenseController extends Controller
                 break;
         }
 
+        $totaux = (clone $query)->selectRaw("
+            SUM(CASE WHEN statut_validation = 'en_attente' THEN 1 ELSE 0 END) AS en_attente,
+            COALESCE(SUM(CASE WHEN statut_validation = 'en_attente' THEN prix_total ELSE 0 END), 0) AS montant_en_attente,
+            SUM(CASE WHEN statut_validation = 'acceptee' THEN 1 ELSE 0 END) AS acceptee,
+            COALESCE(SUM(CASE WHEN statut_validation = 'acceptee' THEN prix_total ELSE 0 END), 0) AS montant_acceptee,
+            SUM(CASE WHEN statut_validation = 'validee' THEN 1 ELSE 0 END) AS validee,
+            COALESCE(SUM(CASE WHEN statut_validation = 'validee' THEN prix_total ELSE 0 END), 0) AS montant_validee,
+            SUM(CASE WHEN statut_validation = 'rejetee' THEN 1 ELSE 0 END) AS rejetee,
+            COALESCE(SUM(CASE WHEN statut_validation = 'rejetee' THEN prix_total ELSE 0 END), 0) AS montant_rejetee
+        ")->first();
         $stats = [];
         foreach (['en_attente', 'acceptee', 'validee', 'rejetee'] as $status) {
-            $stats[$status] = (clone $query)->where('statut_validation', $status)->count();
-            $stats['montant_'.$status] = (clone $query)->where('statut_validation', $status)->sum('prix_total');
+            $stats[$status] = (int) ($totaux->{$status} ?? 0);
+            $stats['montant_'.$status] = $totaux->{'montant_'.$status} ?? 0;
         }
-        $depenses = $query->latest()->paginate(15);
+        $depenses = $query->with(['chantier', 'utilisateur', 'categorie', 'unite'])->latest()->paginate(15);
 
         return view('depenses.index', compact('depenses', 'stats'));
     }

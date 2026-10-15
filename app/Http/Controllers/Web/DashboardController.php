@@ -92,8 +92,13 @@ class DashboardController extends Controller
         $portfolio = null;
         $synthesesChantiers = [];
         if (in_array($userRole, ['administrateur', 'directeur', 'comptable'])) {
-            $portfolio = $finances->totals(Chantier::all(['id', 'budget_alloue']));
-            $synthesesChantiers = $finances->forChantiers($chantiersActifs);
+            $portfolioChantiers = Chantier::all(['id', 'budget_alloue']);
+            $toutesLesSyntheses = $finances->forChantiers($portfolioChantiers);
+            $portfolio = $finances->totals($portfolioChantiers, $toutesLesSyntheses);
+            $synthesesChantiers = array_intersect_key(
+                $toutesLesSyntheses,
+                array_flip($chantiersActifs->pluck('id')->all()),
+            );
         }
 
         return view('dashboard', compact('stats', 'depensesRecentes', 'chantiersActifs', 'userRole', 'portfolio', 'synthesesChantiers'));

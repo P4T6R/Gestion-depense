@@ -61,9 +61,10 @@ class ChantierFinancialService
         return $this->forChantiers(collect([$chantier]))[$chantier->id];
     }
 
-    public function totals(Collection $chantiers): array
+    /** @param  array<int, array<string, string|int>>|null  $summaries */
+    public function totals(Collection $chantiers, ?array $summaries = null): array
     {
-        $summaries = $this->forChantiers($chantiers);
+        $summaries ??= $this->forChantiers($chantiers);
         $fields = ['budget_alloue', 'factures_en_attente', 'depenses_validees', 'montant_paye', 'reste_a_payer', 'solde_disponible', 'historique_a_rapprocher'];
         $result = [];
         foreach ($fields as $field) {
