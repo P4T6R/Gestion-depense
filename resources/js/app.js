@@ -17,6 +17,8 @@ Alpine.data('notificationBell', (config) => ({
     knownIds: new Set(config.notifications.map((notification) => notification.id)),
     audioContext: null,
     refreshTimer: null,
+    visibilityHandler: null,
+    refreshing: false,
 
     init() {
         const unlockSound = async () => {
@@ -33,15 +35,31 @@ Alpine.data('notificationBell', (config) => ({
 
         window.addEventListener('pointerdown', unlockSound, { once: true });
         window.addEventListener('keydown', unlockSound, { once: true });
-        this.refreshTimer = window.setInterval(() => this.refresh(), 20000);
+        this.visibilityHandler = () => {
+            if (document.visibilityState === 'visible') {
+                this.refresh();
+            }
+        };
+        document.addEventListener('visibilitychange', this.visibilityHandler);
+        this.refreshTimer = window.setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                this.refresh();
+            }
+        }, 30000);
     },
 
     destroy() {
         window.clearInterval(this.refreshTimer);
+        document.removeEventListener('visibilitychange', this.visibilityHandler);
         this.audioContext?.close();
     },
 
     async refresh() {
+        if (this.refreshing || document.visibilityState === 'hidden') {
+            return;
+        }
+
+        this.refreshing = true;
         try {
             const { data } = await window.axios.get(config.indexUrl);
             const hasNewNotification = data.notifications.some((notification) => ! this.knownIds.has(notification.id));
@@ -53,6 +71,8 @@ Alpine.data('notificationBell', (config) => ({
             }
         } catch (error) {
             console.error('Impossible de rafraîchir les notifications.', error);
+        } finally {
+            this.refreshing = false;
         }
     },
 
