@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Chantier;
 use App\Models\Paiement;
 use App\Models\User;
+use App\Services\BusinessNotificationService;
 use App\Services\ChantierFinancialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Illuminate\Validation\Rule;
 
 class ChantierController extends Controller
 {
+    public function __construct(private readonly BusinessNotificationService $notifications) {}
+
     public function index(ChantierFinancialService $finances)
     {
         $user = auth()->user();
@@ -72,7 +75,8 @@ class ChantierController extends Controller
             'chef_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'chef_chantier')->where('is_active', true)->whereNull('deleted_at')],
         ]);
 
-        $chantier = DB::transaction(function () use ($validated, $request) {
+        $chef = User::findOrFail($validated['chef_id']);
+        $chantier = DB::transaction(function () use ($validated, $request, $chef) {
             $chantier = Chantier::create([
                 'nom' => $validated['nom'],
                 'lieu' => $validated['lieu'],
@@ -84,10 +88,12 @@ class ChantierController extends Controller
                 'created_by' => $request->user()->id,
             ]);
 
-            $chantier->affecterChef(User::findOrFail($validated['chef_id']));
+            $chantier->affecterChef($chef);
 
             return $chantier;
         });
+
+        $this->notifications->chantierAssigned($chantier, $chef, $request->user());
 
         return redirect()->route('chantiers.index')->with('success', 'Chantier créé avec succès.');
     }
@@ -112,6 +118,9 @@ class ChantierController extends Controller
             'chef_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'chef_chantier')->where('is_active', true)->whereNull('deleted_at')],
         ]);
 
+        $chef = User::findOrFail($validated['chef_id']);
+        $nouvelleAffectation = ! $chantier->chefsChantier()->whereKey($chef->id)->exists();
+
         DB::transaction(function () use ($validated, $chantier) {
             $chantier->update([
                 'nom' => $validated['nom'],
@@ -124,6 +133,10 @@ class ChantierController extends Controller
 
             $chantier->chefsChantier()->sync([$validated['chef_id'] => ['affecte_le' => now()]]);
         });
+
+        if ($nouvelleAffectation) {
+            $this->notifications->chantierAssigned($chantier, $chef, $request->user());
+        }
 
         return redirect()->route('chantiers.index')->with('success', 'Chantier modifié avec succès.');
     }

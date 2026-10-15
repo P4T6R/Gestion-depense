@@ -5,12 +5,15 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Chantier;
 use App\Models\User;
+use App\Services\BusinessNotificationService;
 use App\Services\ChantierFinancialService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ChantierController extends Controller
 {
+    public function __construct(private readonly BusinessNotificationService $notifications) {}
+
     /**
      * Liste des chantiers
      */
@@ -75,7 +78,9 @@ class ChantierController extends Controller
             foreach ($validated['chef_chantier_ids'] as $chefId) {
                 $chef = User::find($chefId);
                 if ($chef && $chef->isChefChantier()) {
-                    $chantier->affecterChef($chef);
+                    if ($chantier->affecterChef($chef)) {
+                        $this->notifications->chantierAssigned($chantier, $chef, $request->user());
+                    }
                 }
             }
         }
@@ -157,7 +162,9 @@ class ChantierController extends Controller
         }
 
         try {
-            $chantier->affecterChef($chef);
+            if ($chantier->affecterChef($chef)) {
+                $this->notifications->chantierAssigned($chantier, $chef, $request->user());
+            }
 
             return response()->json([
                 'message' => 'Chef de chantier affecté avec succès',

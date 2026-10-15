@@ -21,6 +21,13 @@
         ['label' => 'Catégories', 'icon' => 'tag', 'route' => 'categories.index', 'match' => 'categories.*'],
         ['label' => 'Unités', 'icon' => 'scale', 'route' => 'unites.index', 'match' => 'unites.*'],
     ];
+    $initialNotifications = auth()->user()->unreadNotifications()->latest()->limit(20)->get()->map(fn ($notification) => [
+        'id' => $notification->id,
+        'title' => $notification->data['title'] ?? 'Nouvelle notification',
+        'message' => $notification->data['message'] ?? '',
+        'url' => $notification->data['url'] ?? route('dashboard'),
+        'created_at' => $notification->created_at?->diffForHumans(),
+    ])->values();
 @endphp
 <body class="min-h-screen bg-[#F7F6F3] text-[#232323] antialiased" x-data="{ mobileNavOpen: false, profileOpen: false }" @keydown.escape.window="mobileNavOpen = false; profileOpen = false">
     <aside class="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-[#E7E5E1] bg-[#FCFBF9] md:flex">
@@ -101,6 +108,66 @@
                     @if(request()->routeIs('dashboard') || request()->is('dashboard'))
                         <time datetime="{{ now()->toDateString() }}" class="hidden text-sm text-[#555] sm:inline">{{ now()->locale('fr')->isoFormat('D MMM YYYY') }}</time>
                     @endif
+                    <div
+                        class="relative"
+                        x-data="notificationBell({
+                            indexUrl: @js(route('notifications.index')),
+                            readUrl: @js(route('notifications.read', '__ID__')),
+                            readAllUrl: @js(route('notifications.read-all')),
+                            notifications: @js($initialNotifications),
+                            unreadCount: {{ auth()->user()->unreadNotifications()->count() }},
+                        })"
+                        @keydown.escape.window="open = false"
+                    >
+                        <button
+                            type="button"
+                            class="relative rounded-lg p-2 text-[#333] hover:bg-[#F2F0EC] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D7232A]"
+                            @click="open = !open; if (open) refresh()"
+                            :aria-expanded="open"
+                            aria-controls="notifications-menu"
+                            aria-label="Ouvrir les notifications"
+                        >
+                            <x-icon name="bell" class="size-5" />
+                            <span
+                                x-cloak
+                                x-show="unreadCount > 0"
+                                x-text="unreadCount > 99 ? '99+' : unreadCount"
+                                class="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#D7232A] px-1 text-[10px] font-bold text-white"
+                                aria-live="polite"
+                            ></span>
+                        </button>
+                        <div
+                            id="notifications-menu"
+                            x-cloak
+                            x-show="open"
+                            x-trap.inert="open"
+                            @click.outside="open = false"
+                            class="absolute right-0 top-full z-50 mt-3 w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-[#E7E5E1] bg-white shadow-xl"
+                        >
+                            <div class="flex items-center justify-between border-b border-[#E7E5E1] px-4 py-3">
+                                <div>
+                                    <p class="text-sm font-semibold">Notifications</p>
+                                    <p class="text-xs text-[#777]" x-text="unreadCount ? `${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Vous êtes à jour'"></p>
+                                </div>
+                                <button x-show="unreadCount > 0" type="button" @click="markAllRead()" class="text-xs font-semibold text-[#C31F28] hover:underline">Tout marquer comme lu</button>
+                            </div>
+                            <div class="max-h-96 overflow-y-auto" role="list">
+                                <template x-if="notifications.length === 0">
+                                    <div class="px-4 py-8 text-center text-sm text-[#777]">
+                                        <x-icon name="check-check" class="mx-auto mb-2 size-6" />
+                                        Aucune nouvelle notification
+                                    </div>
+                                </template>
+                                <template x-for="notification in notifications" :key="notification.id">
+                                    <button type="button" @click="openNotification(notification)" class="block w-full border-b border-[#F0EEEA] px-4 py-3 text-left last:border-0 hover:bg-[#FAF9F7]" role="listitem">
+                                        <span class="block text-sm font-semibold text-[#232323]" x-text="notification.title"></span>
+                                        <span class="mt-1 block text-xs leading-5 text-[#555]" x-text="notification.message"></span>
+                                        <span class="mt-1 block text-[11px] text-[#888]" x-text="notification.created_at"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
                     <div class="relative hidden border-l border-[#E7E5E1] pl-5 md:block">
                         <button type="button" @click="profileOpen = !profileOpen" :aria-expanded="profileOpen" aria-label="Ouvrir le menu du profil" class="flex items-center gap-3 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D7232A]">
                             <span class="flex size-9 items-center justify-center rounded-full bg-[#D7232A] text-sm font-semibold text-white">{{ mb_substr(auth()->user()->name ?? 'U', 0, 1) }}</span>

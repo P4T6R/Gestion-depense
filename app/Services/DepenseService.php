@@ -16,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class DepenseService
 {
+    public function __construct(private readonly BusinessNotificationService $notifications) {}
+
     public function create(array $data, User $user, array $files = []): Depense
     {
         Gate::forUser($user)->authorize('create', Depense::class);
@@ -39,8 +41,10 @@ class DepenseService
         }
 
         $paths = [];
+        $resoumission = false;
+        $soumise = false;
         try {
-            return DB::transaction(function () use ($depense, $data, $user, $files, &$paths) {
+            $result = DB::transaction(function () use ($depense, $data, $user, $files, &$paths, &$resoumission, &$soumise) {
                 $lignes = $data['lignes'] ?? null;
                 $wasRejected = false;
                 $beforeCorrection = null;
@@ -109,8 +113,11 @@ class DepenseService
                 }
 
                 if ($depense->wasRecentlyCreated) {
+                    $soumise = true;
                     $this->recordHistory($depense, 'creation', $user);
                 } else {
+                    $soumise = $wasRejected;
+                    $resoumission = $wasRejected;
                     $depense->increment('version_courante');
                     $this->recordHistory($depense, $wasRejected ? 'resoumission' : 'modification', $user, $wasRejected ? 'rejetee' : 'en_attente');
                 }
@@ -122,6 +129,12 @@ class DepenseService
             Storage::disk('private')->delete($paths);
             throw $exception;
         }
+
+        if ($soumise) {
+            $this->notifications->expenseSubmitted($result, $user, $resoumission);
+        }
+
+        return $result;
     }
 
     private function resolveFournisseur(array &$data, ?Depense $depense): void

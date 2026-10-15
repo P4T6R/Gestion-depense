@@ -109,15 +109,19 @@ class Chantier extends Model
     }
 
     // Affecter un chef de chantier
-    public function affecterChef(User $chef): void
+    public function affecterChef(User $chef): bool
     {
         if (! $chef->isChefChantier()) {
             throw new \Exception('Seul un chef de chantier peut être affecté');
         }
 
+        $nouvelleAffectation = ! $this->chefsChantier()->whereKey($chef->id)->exists();
+
         $this->chefsChantier()->syncWithoutDetaching([$chef->id => [
             'affecte_le' => now(),
         ]]);
+
+        return $nouvelleAffectation;
     }
 
     // Retirer un chef de chantier

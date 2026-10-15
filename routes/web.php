@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\ChantierController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DepenseController;
 use App\Http\Controllers\Web\FournisseurController;
+use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\PaiementController;
 use App\Http\Controllers\Web\UniteMesureController;
 use App\Http\Controllers\Web\UserController;
@@ -17,6 +18,10 @@ Route::post('/login', [AuthController::class, 'login'])->middleware(['guest', 't
 
 // Routes protégées par authentification web
 Route::middleware(['auth', 'active'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+
     Route::get('/justificatifs/{justificatif}', \App\Http\Controllers\JustificatifController::class)->name('justificatifs.show');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

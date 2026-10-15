@@ -8,6 +8,7 @@ use App\Http\Controllers\API\DepenseController;
 use App\Http\Controllers\API\PaiementController;
 use App\Http\Controllers\API\UniteMesureController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\Web\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,6 +22,10 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:lo
 
 // ========== ROUTES PROTÉGÉES (Authentification requise) ==========
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read']);
 
     Route::get('/justificatifs/{justificatif}', \App\Http\Controllers\JustificatifController::class)->name('api.justificatifs.show');
 
