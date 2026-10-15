@@ -61,6 +61,7 @@ RUN npm ci --no-audit --no-fund
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.js ./
+COPY tailwind.config.js postcss.config.js ./
 RUN npm run build
 
 FROM php-base AS app
