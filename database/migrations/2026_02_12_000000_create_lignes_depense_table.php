@@ -12,16 +12,16 @@ return new class extends Migration
             $table->id();
             $table->foreignId('depense_id')->constrained()->onDelete('cascade');
             $table->foreignId('categorie_depense_id')->nullable()->constrained('categories_depenses')->onDelete('set null');
-            
+
             // Détails de l'article
             $table->string('designation'); // Ciment, Carreau, Sable, etc.
             $table->foreignId('unite_mesure_id')->nullable()->constrained('unites_mesure')->onDelete('set null');
             $table->decimal('quantite', 10, 2);
             $table->decimal('prix_unitaire', 15, 2);
             $table->decimal('montant', 15, 2); // quantite * prix_unitaire
-            
+
             $table->text('observations')->nullable();
-            
+
             $table->timestamps();
         });
     }

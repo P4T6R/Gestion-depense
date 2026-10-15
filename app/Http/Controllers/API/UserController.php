@@ -14,7 +14,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -39,7 +39,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -72,7 +72,7 @@ class UserController extends Controller
      */
     public function show(Request $request, User $user)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -86,13 +86,13 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'email' => 'sometimes|email|unique:users,email,'.$user->id,
             'role' => 'sometimes|in:administrateur,chef_chantier,comptable,directeur',
             'phone' => 'sometimes|nullable|string|max:20',
             'is_active' => 'sometimes|boolean',
@@ -117,12 +117,12 @@ class UserController extends Controller
      */
     public function toggleActive(Request $request, User $user)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $user->update([
-            'is_active' => !$user->is_active
+            'is_active' => ! $user->is_active,
         ]);
 
         $message = $user->is_active ? 'Utilisateur activé' : 'Utilisateur désactivé';
@@ -138,14 +138,14 @@ class UserController extends Controller
      */
     public function destroy(Request $request, User $user)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         // Ne pas supprimer soi-même
         if ($user->id === $request->user()->id) {
             return response()->json([
-                'message' => 'Vous ne pouvez pas vous supprimer vous-même'
+                'message' => 'Vous ne pouvez pas vous supprimer vous-même',
             ], 422);
         }
 
@@ -161,13 +161,13 @@ class UserController extends Controller
      */
     public function chefsChantier(Request $request)
     {
-        if (!$request->user()->isAdministrateur()) {
+        if (! $request->user()->isAdministrateur()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $chefs = User::where('role', 'chef_chantier')
-                     ->where('is_active', true)
-                     ->get();
+            ->where('is_active', true)
+            ->get();
 
         return response()->json($chefs);
     }
