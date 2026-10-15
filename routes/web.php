@@ -17,7 +17,9 @@ Route::get('/login', [AuthController::class, 'showLogin'])->middleware('guest')-
 Route::post('/login', [AuthController::class, 'login'])->middleware(['guest', 'throttle:login']);
 
 // Routes protégées par authentification web
-Route::middleware(['auth', 'active'])->group(function () {
+Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
+    Route::get('/mot-de-passe-temporaire', [AuthController::class, 'showRequiredPasswordChange'])->name('password.change.required');
+    Route::put('/mot-de-passe-temporaire', [AuthController::class, 'updateRequiredPassword'])->middleware('throttle:6,1')->name('password.change.required.update');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');

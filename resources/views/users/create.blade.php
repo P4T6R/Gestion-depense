@@ -113,6 +113,7 @@
                             class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D7232A] focus:border-transparent transition-all outline-hidden"
                             placeholder="••••••••">
                     </div>
+                    <p class="text-xs text-gray-500">12 caractères minimum, avec majuscule, minuscule, chiffre et symbole.</p>
                 </div>
 
                 <!-- Confirmer Mot de passe -->

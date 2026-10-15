@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -47,7 +49,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'max:1024', Password::min(12)->mixedCase()->numbers()->symbols(), 'confirmed'],
             'role' => 'required|string|in:administrateur,comptable,chef_chantier,directeur',
             'phone' => 'nullable|string|max:20',
         ]);
@@ -56,6 +58,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'must_change_password' => true,
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'is_active' => true,
@@ -134,10 +137,15 @@ class UserController extends Controller
         }
 
         $validated = $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'max:1024', Password::min(12)->mixedCase()->numbers()->symbols(), 'confirmed'],
         ]);
 
-        $user->update(['password' => Hash::make($validated['password'])]);
+        $user->forceFill([
+            'password' => Hash::make($validated['password']),
+            'must_change_password' => true,
+            'remember_token' => Str::random(60),
+        ])->save();
+        $user->tokens()->delete();
 
         return redirect()->route('users.index')->with('success', 'Mot de passe modifié avec succès.');
     }

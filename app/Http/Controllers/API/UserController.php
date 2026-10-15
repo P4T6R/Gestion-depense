@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -46,7 +48,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
+            'password' => ['required', 'string', 'max:1024', Password::min(12)->mixedCase()->numbers()->symbols()],
             'role' => 'required|in:administrateur,chef_chantier,comptable,directeur',
             'phone' => 'nullable|string|max:20',
             'is_active' => 'sometimes|boolean',
@@ -56,6 +58,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'must_change_password' => true,
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
@@ -96,12 +99,15 @@ class UserController extends Controller
             'role' => 'sometimes|in:administrateur,chef_chantier,comptable,directeur',
             'phone' => 'sometimes|nullable|string|max:20',
             'is_active' => 'sometimes|boolean',
-            'password' => 'sometimes|string|min:8',
+            'password' => ['sometimes', 'string', 'max:1024', Password::min(12)->mixedCase()->numbers()->symbols()],
         ]);
 
         // Hash du mot de passe si fourni
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
+            $validated['must_change_password'] = true;
+            $user->setRememberToken(Str::random(60));
+            $user->tokens()->delete();
         }
 
         $user->update($validated);

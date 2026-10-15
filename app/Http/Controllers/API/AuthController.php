@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -44,6 +47,7 @@ class AuthController extends Controller
             'message' => 'Connexion réussie',
             'user' => $user,
             'token' => $token,
+            'password_change_required' => $user->must_change_password,
         ]);
     }
 
@@ -109,7 +113,14 @@ class AuthController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string|max:1024',
-            'new_password' => 'required|string|min:8|max:1024|confirmed',
+            'new_password' => [
+                'required',
+                'string',
+                'max:1024',
+                'different:current_password',
+                Password::min(12)->mixedCase()->numbers()->symbols(),
+                'confirmed',
+            ],
         ]);
 
         $user = $request->user();
@@ -120,20 +131,23 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user->update([
+        $user->forceFill([
             'password' => Hash::make($request->new_password),
-        ]);
+            'must_change_password' => false,
+            'remember_token' => Str::random(60),
+        ])->save();
 
         // Supprimer tous les tokens sauf le courant
         $token = $user->currentAccessToken();
         $tokens = $user->tokens();
-        if ($token instanceof \Laravel\Sanctum\PersonalAccessToken) {
+        if ($token instanceof PersonalAccessToken) {
             $tokens->where('id', '!=', $token->id);
         }
         $tokens->delete();
 
         return response()->json([
             'message' => 'Mot de passe modifié avec succès',
+            'password_change_required' => false,
         ]);
     }
 }
