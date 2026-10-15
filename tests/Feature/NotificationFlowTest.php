@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\SendNotificationMail;
 use App\Models\Chantier;
 use App\Models\User;
 use App\Notifications\ChantierAffecteNotification;
@@ -9,6 +10,7 @@ use App\Notifications\DepenseSoumiseNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class NotificationFlowTest extends TestCase
@@ -18,6 +20,7 @@ class NotificationFlowTest extends TestCase
     public function test_submitting_an_expense_notifies_active_reviewers_by_mail_and_in_app(): void
     {
         Notification::fake();
+        Queue::fake();
 
         $chef = User::factory()->chefChantier()->create();
         $admin = User::factory()->admin()->create();
@@ -37,13 +40,15 @@ class NotificationFlowTest extends TestCase
         ])->assertCreated();
 
         Notification::assertSentTo([$admin, $directeur, $comptable], DepenseSoumiseNotification::class, fn ($notification, $channels) => $channels === ['database']);
-        Notification::assertSentTo([$admin, $directeur, $comptable], DepenseSoumiseNotification::class, fn ($notification, $channels) => $channels === ['mail']);
         Notification::assertNotSentTo([$inactiveAdmin, $otherChef, $chef], DepenseSoumiseNotification::class);
+        Queue::assertPushed(SendNotificationMail::class, 3);
+        Queue::assertPushed(SendNotificationMail::class, fn ($job) => $job->recipient->is($admin));
     }
 
     public function test_assigning_a_chantier_notifies_the_chef_only_once(): void
     {
         Notification::fake();
+        Queue::fake();
 
         $admin = User::factory()->admin()->create();
         $chef = User::factory()->chefChantier()->create();
@@ -56,9 +61,8 @@ class NotificationFlowTest extends TestCase
             ->assertOk();
 
         Notification::assertSentTo($chef, ChantierAffecteNotification::class, fn ($notification, $channels) => $channels === ['database']);
-        Notification::assertSentTo($chef, ChantierAffecteNotification::class, fn ($notification, $channels) => $channels === ['mail']);
         $this->assertCount(1, Notification::sent($chef, ChantierAffecteNotification::class, fn ($notification, $channels) => $channels === ['database']));
-        $this->assertCount(1, Notification::sent($chef, ChantierAffecteNotification::class, fn ($notification, $channels) => $channels === ['mail']));
+        Queue::assertPushed(SendNotificationMail::class, 1);
     }
 
     public function test_the_bell_lists_and_marks_only_the_authenticated_users_notifications_as_read(): void

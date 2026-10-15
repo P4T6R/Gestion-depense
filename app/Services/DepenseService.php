@@ -16,7 +16,10 @@ use Illuminate\Validation\ValidationException;
 
 class DepenseService
 {
-    public function __construct(private readonly BusinessNotificationService $notifications) {}
+    public function __construct(
+        private readonly BusinessNotificationService $notifications,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function create(array $data, User $user, array $files = []): Depense
     {
@@ -348,6 +351,20 @@ class DepenseService
                 'validee' => 'validation',
                 'rejetee' => 'rejet',
             }, $user, $previousStatus, $data['motif_rejet'] ?? null);
+
+            $this->audit->log(
+                'expense.'.match ($data['statut_validation']) {
+                    'acceptee' => 'approved',
+                    'validee' => 'validated',
+                    'rejetee' => 'rejected',
+                },
+                'Statut de la dépense modifié.',
+                $user,
+                $locked,
+                null,
+                ['statut_validation' => $previousStatus],
+                ['statut_validation' => $data['statut_validation']],
+            );
 
             return $locked->fresh(['validateur', 'categorie', 'unite']);
         });

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AuditLogger;
+use App\Services\TotpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -13,6 +15,11 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly TotpService $totp,
+    ) {}
+
     /**
      * Connexion utilisateur
      */
@@ -21,11 +28,13 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string|max:1024',
+            'two_factor_code' => 'nullable|digits:6',
         ]);
 
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            $this->audit->log('auth.api_login_failed', 'Tentative de connexion API échouée.', null, $user, $user);
             throw ValidationException::withMessages([
                 'email' => ['Les identifiants sont incorrects.'],
             ]);
@@ -37,11 +46,21 @@ class AuthController extends Controller
             ], 403);
         }
 
+        if ($user->two_factor_confirmed_at && ! $this->totp->verify((string) $user->two_factor_secret, (string) $request->input('two_factor_code'))) {
+            $this->audit->log('two_factor.api_failed', 'Code de double authentification API absent ou invalide.', null, $user, $user);
+
+            return response()->json([
+                'message' => 'Un code de double authentification valide est requis.',
+                'two_factor_required' => true,
+            ], 422);
+        }
+
         // Supprimer les anciens tokens
         $user->tokens()->delete();
 
         // Créer un nouveau token
         $token = $user->createToken('auth_token')->plainTextToken;
+        $this->audit->log('auth.api_login', 'Connexion API réussie.', $user, $user);
 
         return response()->json([
             'message' => 'Connexion réussie',
@@ -56,6 +75,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $this->audit->log('auth.api_logout', 'Déconnexion API.', $request->user(), $request->user());
         // Sanctum peut aussi authentifier par session, sans token persistant.
         $token = $request->user()->currentAccessToken();
         if ($token instanceof \Laravel\Sanctum\PersonalAccessToken) {
@@ -144,6 +164,7 @@ class AuthController extends Controller
             $tokens->where('id', '!=', $token->id);
         }
         $tokens->delete();
+        $this->audit->log('password.api_change', 'Mot de passe modifié depuis l’API.', $user, $user, $user);
 
         return response()->json([
             'message' => 'Mot de passe modifié avec succès',

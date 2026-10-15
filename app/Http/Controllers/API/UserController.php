@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
+    public function __construct(private readonly AuditLogger $audit) {}
+
     /**
      * Liste des utilisateurs (Admin uniquement)
      */
@@ -63,6 +66,7 @@ class UserController extends Controller
             'phone' => $validated['phone'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
+        $this->audit->log('user.api_created', 'Compte créé depuis l’API.', $request->user(), $user, $user, null, ['role' => $user->role]);
 
         return response()->json([
             'message' => 'Utilisateur créé avec succès',
@@ -102,6 +106,9 @@ class UserController extends Controller
             'password' => ['sometimes', 'string', 'max:1024', Password::min(12)->mixedCase()->numbers()->symbols()],
         ]);
 
+        $oldValues = $user->only(['name', 'email', 'role', 'phone', 'is_active']);
+        $passwordWasReset = isset($validated['password']);
+
         // Hash du mot de passe si fourni
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -111,6 +118,10 @@ class UserController extends Controller
         }
 
         $user->update($validated);
+        $this->audit->log('user.api_updated', 'Compte ou rôle modifié depuis l’API.', $request->user(), $user, $user, $oldValues, $user->only(['name', 'email', 'role', 'phone', 'is_active']));
+        if ($passwordWasReset) {
+            $this->audit->log('password.api_admin_reset', 'Mot de passe réinitialisé depuis l’API.', $request->user(), $user, $user);
+        }
 
         return response()->json([
             'message' => 'Utilisateur mis à jour avec succès',
@@ -130,6 +141,7 @@ class UserController extends Controller
         $user->update([
             'is_active' => ! $user->is_active,
         ]);
+        $this->audit->log('user.api_active_toggled', $user->is_active ? 'Compte activé depuis l’API.' : 'Compte désactivé depuis l’API.', $request->user(), $user, $user, null, ['is_active' => $user->is_active]);
 
         $message = $user->is_active ? 'Utilisateur activé' : 'Utilisateur désactivé';
 
@@ -155,6 +167,7 @@ class UserController extends Controller
             ], 422);
         }
 
+        $this->audit->log('user.api_deleted', 'Compte supprimé depuis l’API.', $request->user(), $user, $user);
         $user->delete();
 
         return response()->json([

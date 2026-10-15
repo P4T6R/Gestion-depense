@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
+    public function __construct(private readonly AuditLogger $audit) {}
+
     /**
      * Lister les utilisateurs (Admin seulement)
      */
@@ -54,7 +57,7 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:20',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -63,6 +66,7 @@ class UserController extends Controller
             'phone' => $validated['phone'] ?? null,
             'is_active' => true,
         ]);
+        $this->audit->log('user.created', 'Compte utilisateur créé.', auth()->user(), $user, $user, null, ['role' => $user->role]);
 
         return redirect()->route('users.index')->with('success', 'Utilisateur créé avec succès.');
     }
@@ -95,7 +99,9 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:20',
         ]);
 
+        $oldValues = $user->only(['name', 'email', 'role', 'phone']);
         $user->update($validated);
+        $this->audit->log('user.updated', 'Profil ou rôle utilisateur modifié.', auth()->user(), $user, $user, $oldValues, $user->only(['name', 'email', 'role', 'phone']));
 
         return redirect()->route('users.index')->with('success', 'Utilisateur modifié avec succès.');
     }
@@ -110,6 +116,7 @@ class UserController extends Controller
         }
 
         $user->update(['is_active' => ! $user->is_active]);
+        $this->audit->log('user.active_toggled', $user->is_active ? 'Compte activé.' : 'Compte désactivé.', auth()->user(), $user, $user, null, ['is_active' => $user->is_active]);
         $message = $user->is_active ? 'Utilisateur activé.' : 'Utilisateur désactivé.';
 
         return redirect()->route('users.index')->with('success', $message);
@@ -146,6 +153,7 @@ class UserController extends Controller
             'remember_token' => Str::random(60),
         ])->save();
         $user->tokens()->delete();
+        $this->audit->log('password.admin_reset', 'Mot de passe réinitialisé par un administrateur.', auth()->user(), $user, $user);
 
         return redirect()->route('users.index')->with('success', 'Mot de passe modifié avec succès.');
     }
@@ -159,6 +167,7 @@ class UserController extends Controller
             abort(403, 'Seul un administrateur peut supprimer un utilisateur.');
         }
 
+        $this->audit->log('user.deleted', 'Compte utilisateur supprimé.', auth()->user(), $user, $user);
         $user->delete();
 
         return redirect()->route('users.index')->with('success', 'Utilisateur supprimé avec succès.');

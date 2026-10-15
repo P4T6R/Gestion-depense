@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\AuditLogController;
 use App\Http\Controllers\Web\CategorieDepenseController;
 use App\Http\Controllers\Web\ChantierController;
 use App\Http\Controllers\Web\DashboardController;
@@ -8,6 +9,8 @@ use App\Http\Controllers\Web\DepenseController;
 use App\Http\Controllers\Web\FournisseurController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\PaiementController;
+use App\Http\Controllers\Web\PasswordResetController;
+use App\Http\Controllers\Web\TwoFactorController;
 use App\Http\Controllers\Web\UniteMesureController;
 use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +18,12 @@ use Illuminate\Support\Facades\Route;
 // Routes publiques
 Route::get('/login', [AuthController::class, 'showLogin'])->middleware('guest')->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware(['guest', 'throttle:login']);
+Route::get('/mot-de-passe/oublie', [PasswordResetController::class, 'requestForm'])->middleware('guest')->name('password.request');
+Route::post('/mot-de-passe/oublie', [PasswordResetController::class, 'sendLink'])->middleware(['guest', 'throttle:5,1'])->name('password.email');
+Route::get('/mot-de-passe/reinitialiser/{token}', [PasswordResetController::class, 'resetForm'])->middleware('guest')->name('password.reset');
+Route::post('/mot-de-passe/reinitialiser', [PasswordResetController::class, 'reset'])->middleware(['guest', 'throttle:5,1'])->name('password.update');
+Route::get('/double-authentification/verification', [TwoFactorController::class, 'challengeForm'])->middleware('guest')->name('two-factor.challenge');
+Route::post('/double-authentification/verification', [TwoFactorController::class, 'challenge'])->middleware(['guest', 'throttle:6,1'])->name('two-factor.challenge.verify');
 
 // Routes protégées par authentification web
 Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
@@ -23,6 +32,10 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::get('/securite/deux-facteurs', [TwoFactorController::class, 'settings'])->name('two-factor.settings');
+    Route::post('/securite/deux-facteurs', [TwoFactorController::class, 'enable'])->middleware('throttle:6,1')->name('two-factor.enable');
+    Route::post('/securite/deux-facteurs/confirmer', [TwoFactorController::class, 'confirm'])->middleware('throttle:6,1')->name('two-factor.confirm');
+    Route::delete('/securite/deux-facteurs', [TwoFactorController::class, 'disable'])->middleware('throttle:6,1')->name('two-factor.disable');
 
     Route::get('/justificatifs/{justificatif}', \App\Http\Controllers\JustificatifController::class)->name('justificatifs.show');
 
@@ -44,6 +57,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->group(function () {
         Route::get('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::put('/users/{user}/password', [UserController::class, 'updatePassword'])->name('users.update-password');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
     });
 
     // ========== CHANTIERS (Admin, Chef de chantier, Directeur) ==========

@@ -12,7 +12,10 @@ use Illuminate\Validation\ValidationException;
 
 class PaiementService
 {
-    public function __construct(private DepenseService $depenses) {}
+    public function __construct(
+        private DepenseService $depenses,
+        private AuditLogger $audit,
+    ) {}
 
     public function record(Depense $depense, array $data, User $user): Paiement
     {
@@ -53,6 +56,11 @@ class PaiementService
             ]);
             $this->syncStatus($locked);
             $this->depenses->recordHistory($locked, $legacy ? 'reprise_paiement' : 'paiement', $user, 'validee');
+            $this->audit->log('payment.recorded', 'Paiement enregistré.', $user, $paiement, null, null, [
+                'depense_id' => $locked->id,
+                'montant' => $paiement->montant,
+                'reference' => $paiement->reference,
+            ]);
 
             return $paiement;
         });
@@ -82,6 +90,10 @@ class PaiementService
             ]);
             $this->syncStatus($locked);
             $this->depenses->recordHistory($locked, 'annulation_paiement', $user, 'validee', $reason);
+            $this->audit->log('payment.cancelled', 'Paiement annulé.', $user, $lockedPayment, null, null, [
+                'depense_id' => $locked->id,
+                'motif' => trim($reason),
+            ]);
 
             return $lockedPayment->fresh();
         });

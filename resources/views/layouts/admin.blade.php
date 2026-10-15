@@ -15,6 +15,8 @@
         ['label' => 'Dépenses', 'icon' => 'receipt', 'route' => 'depenses.index', 'match' => 'depenses.index', 'roles' => ['administrateur', 'chef_chantier', 'directeur', 'comptable']],
         ['label' => 'Rapports', 'icon' => 'chart-no-axes-column', 'route' => 'depenses.rapports', 'match' => 'depenses.rapports', 'roles' => ['administrateur', 'comptable']],
         ['label' => 'Utilisateurs', 'icon' => 'users-round', 'route' => 'users.index', 'match' => 'users.*', 'roles' => ['administrateur']],
+        ['label' => 'Journal d’audit', 'icon' => 'list-checks', 'route' => 'audit.index', 'match' => 'audit.*', 'roles' => ['administrateur']],
+        ['label' => 'Sécurité du compte', 'icon' => 'shield-half', 'route' => 'two-factor.settings', 'match' => 'two-factor.settings', 'roles' => ['administrateur', 'comptable']],
     ];
     $adminNavigation = [
         ['label' => 'Fournisseurs', 'icon' => 'truck', 'route' => 'fournisseurs.index', 'match' => 'fournisseurs.*'],

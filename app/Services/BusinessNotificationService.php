@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendNotificationMail;
 use App\Models\Chantier;
 use App\Models\Depense;
 use App\Models\User;
@@ -27,16 +28,12 @@ class BusinessNotificationService
         ));
 
         foreach ($destinataires as $destinataire) {
-            try {
-                $destinataire->notify(new DepenseSoumiseNotification(
-                    $depense,
-                    $auteur,
-                    $resoumission,
-                    ['mail'],
-                ));
-            } catch (\Throwable $exception) {
-                report($exception);
-            }
+            SendNotificationMail::dispatch($destinataire, new DepenseSoumiseNotification(
+                $depense,
+                $auteur,
+                $resoumission,
+                ['mail'],
+            ));
         }
     }
 
@@ -44,10 +41,9 @@ class BusinessNotificationService
     {
         $assignee->notify(new ChantierAffecteNotification($chantier, $auteur, ['database']));
 
-        try {
-            $assignee->notify(new ChantierAffecteNotification($chantier, $auteur, ['mail']));
-        } catch (\Throwable $exception) {
-            report($exception);
-        }
+        SendNotificationMail::dispatch(
+            $assignee,
+            new ChantierAffecteNotification($chantier, $auteur, ['mail']),
+        );
     }
 }

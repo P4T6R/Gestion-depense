@@ -109,7 +109,7 @@
                             <input type="checkbox" class="w-4 h-4 rounded border-gray-300 text-[#E31E24] focus:ring-[#E31E24] focus:ring-offset-0">
                             <span class="ml-2 text-sm text-gray-700 group-hover:text-gray-900">Se souvenir de moi</span>
                         </label>
-                        <a href="#" class="text-sm font-semibold text-[#E31E24] hover:text-[#C71A20] transition-colors">
+                        <a href="{{ route('password.request') }}" class="text-sm font-semibold text-[#E31E24] hover:text-[#C71A20] transition-colors">
                             Mot de passe oublié ?
                         </a>
                     </div>
