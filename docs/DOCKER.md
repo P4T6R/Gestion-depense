@@ -17,6 +17,8 @@ Sous Windows PowerShell, utilisez `Copy-Item .env.docker.example .env.docker` à
 
 L’application est disponible sur `http://localhost:8080`. Les données MySQL, les fichiers privés et les sauvegardes sont conservés dans des volumes Docker nommés.
 
+Le port lié à l’interface locale peut être remplacé avec `APP_HTTP_PORT` dans `.env.docker` lorsqu’un autre service utilise déjà le port 8080.
+
 Ne lancez jamais `docker compose down -v` sur une installation contenant des données à conserver : l’option `-v` supprime les volumes.
 
 ## Gmail SMTP
