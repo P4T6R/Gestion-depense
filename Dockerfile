@@ -89,5 +89,5 @@ COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
-    CMD wget --quiet --spider http://127.0.0.1/login || exit 1
+    CMD wget --quiet --spider http://127.0.0.1/healthz || exit 1
 CMD ["nginx", "-g", "daemon off;"]
